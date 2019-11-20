@@ -4,8 +4,8 @@ import Browser
 import Html as H
 import Html.Attributes as Attr
 import Html.Events as Events
-import Json.Decode as Json
-import List
+import Tuple
+import String
 
 
 main =
@@ -31,11 +31,12 @@ type alias Players =
 type alias Player =
     { name : String
     , color : String
+    , id: Int
     }
 
 
 initialModel =
-    StartScreen ( { name = "Player1", color = "red" }, { name = "Player2", color = "blue" } )
+    StartScreen ( { name = "Player1", color = "red", id = 1 }, { name = "Player2", color = "blue", id = 2 } )
 
 
 
@@ -65,34 +66,31 @@ view : Model -> H.Html Msg
 view model =
     case model of
         StartScreen players ->
-            startScreenView players
+            defaultsForPlayersView players
 
 
-startScreenView : Players -> H.Html Msg
-startScreenView ( p1, p2 ) =
+defaultsForPlayersView : Players -> H.Html Msg
+defaultsForPlayersView players =
     let
-        innerHtmlDecoder : Json.Decoder String
-        innerHtmlDecoder =
-            Json.at [ "target", "innerHTML" ] Json.string
-
-        colorSelector : List String -> H.Html Msg
-        colorSelector colors =
-            H.select []
-                (List.map (\color -> H.option [ Attr.value color ] [ H.text color ]) colors)
-
-        playerEditor : Player -> H.Html Msg
-        playerEditor player =
-            H.div []
-                [ H.div []
-                    [ H.span
-                        [ Attr.contenteditable True
-                        , Events.on "input" (Json.map NameChanged innerHtmlDecoder)
-                        ]
-                        [ H.text player.name ]
-                    , colorSelector [ "red", "blue", "green" ]
-                    ]
+        mapper : Player -> H.Html Msg
+        mapper player =
+            H.div
+                []
+                [
+                    H.h3 [] [H.text ("Player" ++ String.fromInt player.id ++ "'s" ++ "Name:")],
+                    H.p [] [H.text player.name],
+                    H.h3 [] [H.text ("Player" ++ String.fromInt player.id ++ "'s" ++ "Color:")],
+                    H.p [] [H.text player.color]
                 ]
+
+        playersDefaults : (H.Html Msg, H.Html Msg)
+        playersDefaults =
+            Tuple.mapBoth mapper mapper players
     in
-    H.div []
-        [ playerEditor p1
-        ]
+        H.div
+            []
+            [
+                H.h1 [] [H.text "Defaults For Players"],
+                Tuple.first playersDefaults,
+                Tuple.second playersDefaults
+            ]
