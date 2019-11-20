@@ -86,11 +86,21 @@ defaultsForPlayersView players =
         playersDefaults : (H.Html Msg, H.Html Msg)
         playersDefaults =
             Tuple.mapBoth mapper mapper players
+
+        controls : H.Html Msg
+        controls =
+            H.div
+                []
+                [
+                    H.button [] [H.text "Accept Defaults"],
+                    H.button [] [H.text "Change Defaults"]
+                ]
     in
         H.div
             []
             [
                 H.h1 [] [H.text "Defaults For Players"],
                 Tuple.first playersDefaults,
-                Tuple.second playersDefaults
+                Tuple.second playersDefaults,
+                controls
             ]
