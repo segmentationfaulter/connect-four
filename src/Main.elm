@@ -29,19 +29,20 @@ type alias Players =
     ( Player, Player )
 
 
+type PlayerID
+    = One
+    | Two
+
+
 type alias Player =
     { name : String
     , color : String
-    , id : Int
+    , id : PlayerID
     }
 
 
-playersDefaults =
-    ( { name = "Player1", color = "#FF0000", id = 1 }, { name = "Player2", color = "#0000FF", id = 2 } )
-
-
 initialModel =
-    ShowingDefaults playersDefaults
+    ShowingDefaults ( { name = "Player1", color = "#FF0000", id = One }, { name = "Player2", color = "#0000FF", id = Two } )
 
 
 
@@ -50,13 +51,41 @@ initialModel =
 
 type Msg
     = ProceedToChangeDefaults
+    | PlayerNameChanged PlayerID String
+    | PlayerColorChanged PlayerID String
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
         ProceedToChangeDefaults ->
-            ShowingFormToChangeDefaults playersDefaults
+            case model of
+                ShowingDefaults players ->
+                    ShowingFormToChangeDefaults players
+
+                ShowingFormToChangeDefaults players ->
+                    model
+
+        PlayerNameChanged id name ->
+            case id of
+                One ->
+                    case model of
+                        ShowingDefaults _ ->
+                            model
+
+                        ShowingFormToChangeDefaults ( p1, p2 ) ->
+                            ShowingFormToChangeDefaults ( { p1 | name = name }, p2 )
+
+                Two ->
+                    case model of
+                        ShowingDefaults _ ->
+                            model
+
+                        ShowingFormToChangeDefaults ( p1, p2 ) ->
+                            ShowingFormToChangeDefaults ( p1, { p2 | name = name } )
+
+        PlayerColorChanged id color ->
+            model
 
 
 
@@ -76,13 +105,22 @@ view model =
 defaultsForPlayersView : Players -> H.Html Msg
 defaultsForPlayersView players =
     let
+        mapPlayerIdToNumber : PlayerID -> Int
+        mapPlayerIdToNumber id =
+            case id of
+                One ->
+                    1
+
+                Two ->
+                    2
+
         mapper : Player -> H.Html Msg
         mapper player =
             H.div
                 []
-                [ H.h3 [] [ H.text ("Player" ++ String.fromInt player.id ++ "'s" ++ "Name:") ]
+                [ H.h3 [] [ H.text ("Player" ++ String.fromInt (mapPlayerIdToNumber player.id) ++ "'s" ++ "Name:") ]
                 , H.p [] [ H.text player.name ]
-                , H.h3 [] [ H.text ("Player" ++ String.fromInt player.id ++ "'s" ++ "Color:") ]
+                , H.h3 [] [ H.text ("Player" ++ String.fromInt (mapPlayerIdToNumber player.id) ++ "'s" ++ "Color:") ]
                 , H.p [] [ H.text player.color ]
                 ]
 
@@ -117,7 +155,7 @@ formViewToChangeDefaults players =
                 [ H.legend [] [ H.text ("Make changes to defaults of " ++ player.name) ]
                 , H.label []
                     [ H.text "Name: "
-                    , H.input [ Attr.type_ "text" ] []
+                    , H.input [ Attr.type_ "text", Events.onInput (PlayerNameChanged player.id) ] []
                     ]
                 , H.label []
                     [ H.text "Color: "
