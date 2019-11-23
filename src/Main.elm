@@ -120,15 +120,6 @@ view model =
 defaultsForPlayersView : Players -> H.Html Msg
 defaultsForPlayersView players =
     let
-        mapPlayerIdToNumber : PlayerID -> Int
-        mapPlayerIdToNumber id =
-            case id of
-                One ->
-                    1
-
-                Two ->
-                    2
-
         mapper : Player -> H.Html Msg
         mapper player =
             H.div
@@ -167,10 +158,10 @@ formViewToChangeDefaults players =
         fieldsetViewForPlayer player =
             H.fieldset
                 []
-                [ H.legend [] [ H.text ("Make changes to defaults of " ++ player.name) ]
+                [ H.legend [] [ H.text ("Make changes to defaults of Player" ++ String.fromInt (mapPlayerIdToNumber player.id)) ]
                 , H.label []
                     [ H.text "Name: "
-                    , H.input [ Attr.type_ "text", Events.onInput (PlayerNameChanged player.id) ] []
+                    , H.input [ Attr.type_ "text", Attr.value player.name, Events.onInput (PlayerNameChanged player.id) ] []
                     ]
                 , H.label []
                     [ H.text "Color: "
@@ -181,10 +172,61 @@ formViewToChangeDefaults players =
         fieldsets : ( H.Html Msg, H.Html Msg )
         fieldsets =
             Tuple.mapBoth fieldsetViewForPlayer fieldsetViewForPlayer players
+
+        validationError : Maybe String
+        validationError =
+            let
+                playersNamesMatch =
+                    (Tuple.first players).name == (Tuple.second players).name
+
+                playersColorsMatch =
+                    (Tuple.first players).color == (Tuple.second players).color
+            in
+            if playersColorsMatch then
+                Just "Both players cannot have same colors"
+
+            else if playersNamesMatch then
+                Just "Both players cannot have same names"
+
+            else
+                Nothing
+
+        validationMessage : H.Html Msg
+        validationMessage =
+            case validationError of
+                Just error ->
+                    H.text error
+
+                Nothing ->
+                    H.text ""
+
+        disableSubmitButton : Bool
+        disableSubmitButton =
+            case validationError of
+                Just _ ->
+                    True
+
+                Nothing ->
+                    False
     in
     H.form
         []
         [ Tuple.first fieldsets
         , Tuple.second fieldsets
-        , H.input [ Attr.type_ "submit", Attr.value "Submit change and proceed to game" ] []
+        , H.input [ Attr.type_ "submit", Attr.value "Submit change and proceed to game", Attr.disabled disableSubmitButton ] []
+        , H.p [] [ validationMessage ]
         ]
+
+
+
+-- Helpers
+
+
+mapPlayerIdToNumber : PlayerID -> Int
+mapPlayerIdToNumber id =
+    case id of
+        One ->
+            1
+
+        Two ->
+            2
