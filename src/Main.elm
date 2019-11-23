@@ -85,7 +85,22 @@ update msg model =
                             ShowingFormToChangeDefaults ( p1, { p2 | name = name } )
 
         PlayerColorChanged id color ->
-            model
+            case id of
+                One ->
+                    case model of
+                        ShowingDefaults _ ->
+                            model
+
+                        ShowingFormToChangeDefaults ( p1, p2 ) ->
+                            ShowingFormToChangeDefaults ( { p1 | color = color }, p2 )
+
+                Two ->
+                    case model of
+                        ShowingDefaults _ ->
+                            model
+
+                        ShowingFormToChangeDefaults ( p1, p2 ) ->
+                            ShowingFormToChangeDefaults ( p1, { p2 | color = color } )
 
 
 
@@ -159,7 +174,7 @@ formViewToChangeDefaults players =
                     ]
                 , H.label []
                     [ H.text "Color: "
-                    , H.input [ Attr.type_ "color", Attr.value player.color ] []
+                    , H.input [ Attr.type_ "color", Attr.value player.color, Events.onInput (PlayerColorChanged player.id) ] []
                     ]
                 ]
 
