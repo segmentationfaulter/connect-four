@@ -4,11 +4,11 @@ import Main exposing (Player)
 
 
 gridHeight =
-    7
+    6
 
 
 gridWidth =
-    6
+    7
 
 
 type alias ColumnIndex =
@@ -91,6 +91,29 @@ getVerticalSlotsToTest targetIndex grid =
 
         (Column slots _) :: tail ->
             List.map (\slot -> { filledBy = slot.filledBy, index = slot.rowIndex }) slots
+
+
+-- Right diagonal is the one which links bottom left to top right
+
+getIndexesOfRightDiagonal : ColumnIndex -> RowIndex -> List (ColumnIndex, RowIndex)    
+getIndexesOfRightDiagonal targetColumnIndex targetRowIndex =
+    let
+        upperHalfOfIndexes : ColumnIndex -> RowIndex -> List (ColumnIndex, RowIndex) -> List (ColumnIndex, RowIndex)
+        upperHalfOfIndexes colIndex rowIndex accumulator =
+            if (colIndex < gridWidth && rowIndex < gridHeight) then
+                upperHalfOfIndexes (colIndex + 1) (rowIndex + 1) (accumulator ++ [(colIndex, rowIndex)])
+            else
+                accumulator
+        lowerHalfOfIndexes : ColumnIndex -> RowIndex -> List (ColumnIndex, RowIndex) -> List (ColumnIndex, RowIndex)
+        lowerHalfOfIndexes colIndex rowIndex accumulator =
+            if (colIndex > -1 && rowIndex > -1) then
+                lowerHalfOfIndexes (colIndex - 1) (rowIndex - 1) ((colIndex, rowIndex)::accumulator)
+            else
+                accumulator
+    in
+        lowerHalfOfIndexes targetColumnIndex targetRowIndex [] ++ upperHalfOfIndexes (targetColumnIndex + 1) (targetRowIndex + 1) []
+    
+
 
 
 wonAgainstSlotsUnderTest : List SlotUnderTest -> Bool
