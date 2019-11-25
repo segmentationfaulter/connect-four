@@ -23,6 +23,7 @@ main =
 type Model
     = ShowingDefaults Players
     | ShowingFormToChangeDefaults Players
+    | ShowingGameBoard Players FirstMover Grid
 
 
 type alias Players =
@@ -32,6 +33,9 @@ type alias Players =
 type PlayerID
     = One
     | Two
+
+
+type alias FirstMover = PlayerID
 
 
 type alias Player =
@@ -53,6 +57,7 @@ type Msg
     = ProceedToChangeDefaults
     | PlayerNameChanged PlayerID String
     | PlayerColorChanged PlayerID String
+    | ProceedToPlay
 
 
 update : Msg -> Model -> Model
@@ -66,6 +71,9 @@ update msg model =
                 ShowingFormToChangeDefaults players ->
                     model
 
+                ShowingGameBoard _ _ _ -> model
+
+
         PlayerNameChanged id name ->
             case id of
                 One ->
@@ -76,6 +84,7 @@ update msg model =
                         ShowingFormToChangeDefaults ( p1, p2 ) ->
                             ShowingFormToChangeDefaults ( { p1 | name = name }, p2 )
 
+                        ShowingGameBoard _ _ _ -> model
                 Two ->
                     case model of
                         ShowingDefaults _ ->
@@ -83,6 +92,8 @@ update msg model =
 
                         ShowingFormToChangeDefaults ( p1, p2 ) ->
                             ShowingFormToChangeDefaults ( p1, { p2 | name = name } )
+
+                        ShowingGameBoard _ _ _ -> model
 
         PlayerColorChanged id color ->
             case id of
@@ -94,6 +105,7 @@ update msg model =
                         ShowingFormToChangeDefaults ( p1, p2 ) ->
                             ShowingFormToChangeDefaults ( { p1 | color = color }, p2 )
 
+                        ShowingGameBoard _ _ _ -> model
                 Two ->
                     case model of
                         ShowingDefaults _ ->
@@ -101,7 +113,17 @@ update msg model =
 
                         ShowingFormToChangeDefaults ( p1, p2 ) ->
                             ShowingFormToChangeDefaults ( p1, { p2 | color = color } )
+        
+                        ShowingGameBoard _ _ _ -> model
+        ProceedToPlay ->
+            case model of
+                ShowingDefaults players ->
+                    ShowingGameBoard players One initialGrid
 
+                ShowingFormToChangeDefaults players ->
+                    ShowingGameBoard players One initialGrid
+
+                ShowingGameBoard _ _ _ -> model
 
 
 -- View
@@ -115,6 +137,8 @@ view model =
 
         ShowingFormToChangeDefaults players ->
             formViewToChangeDefaults players
+
+        ShowingGameBoard _ _ _ -> H.text "Game board"
 
 
 
@@ -142,7 +166,7 @@ defaultsForPlayersView players =
         controls =
             H.div
                 []
-                [ H.button [] [ H.text "Accept Defaults" ]
+                [ H.button [Events.onClick ProceedToPlay] [ H.text "Accept Defaults" ]
                 , H.button [ Events.onClick ProceedToChangeDefaults ] [ H.text "Change Defaults" ]
                 ]
     in
@@ -214,7 +238,7 @@ formViewToChangeDefaults players =
                     False
     in
     H.form
-        []
+        [Events.onSubmit ProceedToPlay]
         [ Tuple.first fieldsets
         , Tuple.second fieldsets
         , H.input [ Attr.type_ "submit", Attr.value "Submit change and proceed to game", Attr.disabled disableSubmitButton ] []
@@ -394,7 +418,6 @@ wonAgainstSlotsUnderTest slots =
 
     else
         False
-
 
 
 -- Helpers
