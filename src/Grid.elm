@@ -112,8 +112,29 @@ getIndexesOfRightDiagonal targetColumnIndex targetRowIndex =
                 accumulator
     in
         lowerHalfOfIndexes targetColumnIndex targetRowIndex [] ++ upperHalfOfIndexes (targetColumnIndex + 1) (targetRowIndex + 1) []
-    
 
+
+-- Left diagonal is the one which link bottom right to top left
+
+getIndexesOfLeftDiagonal : ColumnIndex -> RowIndex -> List (ColumnIndex, RowIndex)
+getIndexesOfLeftDiagonal targetColumnIndex targetRowIndex =
+    let
+        upperHalfOfIndexes : ColumnIndex -> RowIndex -> List (ColumnIndex, RowIndex) -> List (ColumnIndex, RowIndex)
+        upperHalfOfIndexes colIndex rowIndex accumulator =
+            if (colIndex > -1 && rowIndex < gridHeight) then
+                upperHalfOfIndexes (colIndex - 1) (rowIndex + 1) (accumulator ++ [(colIndex, rowIndex)])
+            else
+                accumulator
+
+        lowerHalfOfIndexes : ColumnIndex -> RowIndex -> List (ColumnIndex, RowIndex) -> List (ColumnIndex, RowIndex)
+        lowerHalfOfIndexes colIndex rowIndex accumulator =
+            if (colIndex < gridWidth && rowIndex > -1) then
+                lowerHalfOfIndexes (colIndex + 1) (rowIndex - 1) ((colIndex, rowIndex)::accumulator)
+            else
+                accumulator
+    in
+        lowerHalfOfIndexes (targetColumnIndex + 1) (targetRowIndex - 1) [] ++ upperHalfOfIndexes targetColumnIndex targetRowIndex []
+    
 
 
 wonAgainstSlotsUnderTest : List SlotUnderTest -> Bool
