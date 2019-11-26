@@ -36,7 +36,7 @@ type PlayerID
 
 
 type alias Mover =
-    PlayerID
+    Maybe PlayerID
 
 
 type alias Player =
@@ -172,10 +172,10 @@ update msg model =
         ProceedToPlay ->
             case model of
                 ShowingDefaults players ->
-                    ShowingGameBoard players One initialGrid
+                    ShowingGameBoard players (Just One) initialGrid
 
                 ShowingFormToChangeDefaults players ->
-                    ShowingGameBoard players One initialGrid
+                    ShowingGameBoard players (Just One) initialGrid
 
                 ShowingGameBoard _ _ _ ->
                     model
@@ -191,15 +191,25 @@ update msg model =
                 ShowingGameBoard players mover currentGrid ->
                     let
                         updatedGrid =
-                            addDisk mover colIndex currentGrid
+                            case mover of
+                                Just pid ->
+                                    addDisk pid colIndex currentGrid
+
+                                Nothing ->
+                                    currentGrid
 
                         nextMover =
                             case mover of
-                                One ->
-                                    Two
+                                Just pid ->
+                                    case pid of
+                                        One ->
+                                            Just Two
 
-                                Two ->
-                                    One
+                                        Two ->
+                                            Just One
+
+                                Nothing ->
+                                    Nothing
                     in
                     ShowingGameBoard players nextMover updatedGrid
 
@@ -463,7 +473,16 @@ wonAgainstSlotsUnderTest slots =
         False
 
 
-drawGrid : Players -> PlayerID -> Grid -> H.Html Msg
+didMoverWonIt : RowIndex -> ColumnIndex -> Grid -> Bool
+didMoverWonIt targetRowIndex targetColumnIndex grid =
+    let
+        horizontalSlotsToTest =
+            getHorizontalSlotsToTest targetRowIndex grid
+    in
+    wonAgainstSlotsUnderTest horizontalSlotsToTest
+
+
+drawGrid : Players -> Mover -> Grid -> H.Html Msg
 drawGrid players mover grid =
     let
         drawSlot : Slot -> H.Html Msg
@@ -484,18 +503,31 @@ drawGrid players mover grid =
                 , Events.onClick (AddDisk colIndex)
                 ]
                 (List.map drawSlot slots)
+
+        isTheGameOver =
+            case mover of
+                Just pid ->
+                    False
+
+                Nothing ->
+                    True
     in
     H.div
-        [ Attr.class "grid" ]
+        [ Attr.classList [ ( "grid", True ), ( "game-over", isTheGameOver ) ] ]
         (List.map drawColumn grid)
 
 
-moveInfo : Players -> PlayerID -> Grid -> H.Html Msg
+moveInfo : Players -> Mover -> Grid -> H.Html Msg
 moveInfo players mover grid =
-    H.div
-        [ Attr.class "move-info" ]
-        [ H.div [] [ H.text ("Next Mover: " ++ .name (getPlayerById mover players)) ]
-        ]
+    case mover of
+        Just pid ->
+            H.div
+                [ Attr.class "move-info" ]
+                [ H.div [] [ H.text ("Next Mover: " ++ .name (getPlayerById pid players)) ]
+                ]
+
+        Nothing ->
+            H.text "Game over"
 
 
 

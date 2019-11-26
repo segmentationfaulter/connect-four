@@ -19,6 +19,10 @@
     border: 1px solid gray;
 }
 
+.grid.game-over {
+    pointer-events: none;
+}
+
 .column {
     display: flex;
     flex-direction: column;
