@@ -23,7 +23,7 @@ main =
 type Model
     = ShowingDefaults Players
     | ShowingFormToChangeDefaults Players
-    | ShowingGameBoard Players FirstMover Grid
+    | ShowingGameBoard Players Mover Grid
 
 
 type alias Players =
@@ -35,7 +35,7 @@ type PlayerID
     | Two
 
 
-type alias FirstMover =
+type alias Mover =
     PlayerID
 
 
