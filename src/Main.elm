@@ -54,8 +54,8 @@ type alias RowIndex =
     Int
 
 
-type alias HasVacantSlot =
-    Bool
+type alias LastInsertionMadeAt =
+    RowIndex
 
 
 type alias Slot =
@@ -71,7 +71,7 @@ type alias SlotUnderTest =
 
 
 type Column
-    = Column (List Slot) ColumnIndex HasVacantSlot
+    = Column (List Slot) ColumnIndex LastInsertionMadeAt
 
 
 type alias Grid =
@@ -92,7 +92,7 @@ initialModel =
 
 initialGrid : Grid
 initialGrid =
-    List.repeat gridWidth [] |> List.indexedMap (\colIndex column -> Column column colIndex True)
+    List.repeat gridWidth [] |> List.indexedMap (\colIndex column -> Column column colIndex -1)
 
 
 
@@ -338,22 +338,19 @@ addDisk : PlayerID -> ColumnIndex -> Grid -> Grid
 addDisk pid targetIndex grid =
     let
         mapper : Column -> Column
-        mapper (Column slots colIndex hasVacantSlot) =
+        mapper (Column slots colIndex lastInsertionMadeAt) =
             let
-                rowIndex =
-                    List.length slots
-
                 newSlot =
-                    Slot pid rowIndex
-            in
-            if not hasVacantSlot then
-                Column slots colIndex hasVacantSlot
+                    Slot pid (lastInsertionMadeAt + 1)
 
-            else if colIndex == targetIndex then
-                Column (newSlot :: slots) colIndex (rowIndex < gridHeight - 1)
+                hasVacantSlot =
+                    lastInsertionMadeAt < gridHeight - 1
+            in
+            if colIndex == targetIndex && hasVacantSlot then
+                Column (newSlot :: slots) colIndex (lastInsertionMadeAt + 1)
 
             else
-                Column slots colIndex hasVacantSlot
+                Column slots colIndex lastInsertionMadeAt
     in
     List.map mapper grid
 
@@ -480,9 +477,9 @@ drawGrid players mover grid =
                 []
 
         drawColumn : Column -> H.Html Msg
-        drawColumn (Column slots colIndex hasVacantSlot) =
+        drawColumn (Column slots colIndex lastInsertionMadeAt) =
             H.div
-                [ Attr.classList [("column", True), ("filled", not hasVacantSlot)]
+                [ Attr.classList [ ( "column", True ), ( "filled", lastInsertionMadeAt == gridHeight - 1 ) ]
                 , Attr.title "Click to add a disk"
                 , Events.onClick (AddDisk colIndex)
                 ]
