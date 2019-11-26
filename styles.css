@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 .grid {
     --slotWidth: 50px;
     --slotHeight: 50px;
@@ -10,6 +14,9 @@
 }
 
 .column {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     width: var(--slotWidth);
     height: calc(var(--slotHeight) * var(--gridHeight));
     border-right: 1px solid gray;
@@ -22,4 +29,12 @@
 
 .column:hover {
     background: #f7f3ef;
+}
+
+.slot {
+    width: var(--slotWidth);
+    height: var(--slotHeight);
+    border-width: 5px;
+    border-style: solid;
+    border-radius: 50%;
 }

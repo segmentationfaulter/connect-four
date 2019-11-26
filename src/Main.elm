@@ -166,7 +166,7 @@ view model =
             formViewToChangeDefaults players
 
         ShowingGameBoard players mover grid ->
-            drawGrid grid
+            drawGrid grid players
 
 
 
@@ -448,16 +448,17 @@ wonAgainstSlotsUnderTest slots =
         False
 
 
-drawGrid : Grid -> H.Html Msg
-drawGrid grid =
+drawGrid : Grid -> Players -> H.Html Msg
+drawGrid grid players =
     let
-        slotHeightInPixels =
-            100
-
         drawSlot : Slot -> H.Html Msg
         drawSlot slot =
+            let
+                { color } = getPlayerById slot.filledBy players
+            in
+            
             H.div
-                [ Attr.class "slot" ]
+                [ Attr.class "slot", Attr.style "border-color" color ]
                 []
 
         drawColumn : Column -> H.Html Msg
@@ -483,3 +484,9 @@ mapPlayerIdToNumber id =
 
         Two ->
             2
+
+getPlayerById : PlayerID -> Players -> Player
+getPlayerById pid players =
+    case pid of
+        One -> Tuple.first players 
+        Two -> Tuple.second players
