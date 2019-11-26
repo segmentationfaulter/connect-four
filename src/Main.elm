@@ -35,7 +35,8 @@ type PlayerID
     | Two
 
 
-type alias FirstMover = PlayerID
+type alias FirstMover =
+    PlayerID
 
 
 type alias Player =
@@ -71,8 +72,8 @@ update msg model =
                 ShowingFormToChangeDefaults players ->
                     model
 
-                ShowingGameBoard _ _ _ -> model
-
+                ShowingGameBoard _ _ _ ->
+                    model
 
         PlayerNameChanged id name ->
             case id of
@@ -84,7 +85,9 @@ update msg model =
                         ShowingFormToChangeDefaults ( p1, p2 ) ->
                             ShowingFormToChangeDefaults ( { p1 | name = name }, p2 )
 
-                        ShowingGameBoard _ _ _ -> model
+                        ShowingGameBoard _ _ _ ->
+                            model
+
                 Two ->
                     case model of
                         ShowingDefaults _ ->
@@ -93,7 +96,8 @@ update msg model =
                         ShowingFormToChangeDefaults ( p1, p2 ) ->
                             ShowingFormToChangeDefaults ( p1, { p2 | name = name } )
 
-                        ShowingGameBoard _ _ _ -> model
+                        ShowingGameBoard _ _ _ ->
+                            model
 
         PlayerColorChanged id color ->
             case id of
@@ -105,7 +109,9 @@ update msg model =
                         ShowingFormToChangeDefaults ( p1, p2 ) ->
                             ShowingFormToChangeDefaults ( { p1 | color = color }, p2 )
 
-                        ShowingGameBoard _ _ _ -> model
+                        ShowingGameBoard _ _ _ ->
+                            model
+
                 Two ->
                     case model of
                         ShowingDefaults _ ->
@@ -113,8 +119,10 @@ update msg model =
 
                         ShowingFormToChangeDefaults ( p1, p2 ) ->
                             ShowingFormToChangeDefaults ( p1, { p2 | color = color } )
-        
-                        ShowingGameBoard _ _ _ -> model
+
+                        ShowingGameBoard _ _ _ ->
+                            model
+
         ProceedToPlay ->
             case model of
                 ShowingDefaults players ->
@@ -123,7 +131,9 @@ update msg model =
                 ShowingFormToChangeDefaults players ->
                     ShowingGameBoard players One initialGrid
 
-                ShowingGameBoard _ _ _ -> model
+                ShowingGameBoard _ _ _ ->
+                    model
+
 
 
 -- View
@@ -138,7 +148,8 @@ view model =
         ShowingFormToChangeDefaults players ->
             formViewToChangeDefaults players
 
-        ShowingGameBoard _ _ _ -> H.text "Game board"
+        ShowingGameBoard players mover grid ->
+            drawGrid grid
 
 
 
@@ -166,7 +177,7 @@ defaultsForPlayersView players =
         controls =
             H.div
                 []
-                [ H.button [Events.onClick ProceedToPlay] [ H.text "Accept Defaults" ]
+                [ H.button [ Events.onClick ProceedToPlay ] [ H.text "Accept Defaults" ]
                 , H.button [ Events.onClick ProceedToChangeDefaults ] [ H.text "Change Defaults" ]
                 ]
     in
@@ -238,7 +249,7 @@ formViewToChangeDefaults players =
                     False
     in
     H.form
-        [Events.onSubmit ProceedToPlay]
+        [ Events.onSubmit ProceedToPlay ]
         [ Tuple.first fieldsets
         , Tuple.second fieldsets
         , H.input [ Attr.type_ "submit", Attr.value "Submit change and proceed to game", Attr.disabled disableSubmitButton ] []
@@ -418,6 +429,30 @@ wonAgainstSlotsUnderTest slots =
 
     else
         False
+
+
+drawGrid : Grid -> H.Html Msg
+drawGrid grid =
+    let
+        slotHeightInPixels =
+            100
+
+        drawSlot : Slot -> H.Html Msg
+        drawSlot slot =
+            H.div
+                [ Attr.class "slot" ]
+                []
+
+        drawColumn : Column -> H.Html Msg
+        drawColumn (Column slots colIndex) =
+            H.div
+                [ Attr.class "column", Attr.title "Click to add a disk" ]
+                (List.map drawSlot slots)
+    in
+    H.div
+        [ Attr.class "grid" ]
+        (List.map drawColumn grid)
+
 
 
 -- Helpers

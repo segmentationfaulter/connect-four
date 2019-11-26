@@ -1,0 +1,25 @@
+.grid {
+    --slotWidth: 50px;
+    --slotHeight: 50px;
+    --gridHeight: 6;
+    --gridWidth: 7;
+    display: flex;
+    width: calc(var(--slotWidth) * var(--gridWidth));
+    margin: 100px auto 0;
+    border: 1px solid gray;
+}
+
+.column {
+    width: var(--slotWidth);
+    height: calc(var(--slotHeight) * var(--gridHeight));
+    border-right: 1px solid gray;
+    cursor: pointer;
+}
+
+.column:last-child {
+    border-right: none;
+}
+
+.column:hover {
+    background: #f7f3ef;
+}
