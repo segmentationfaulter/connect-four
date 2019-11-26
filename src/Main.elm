@@ -54,6 +54,10 @@ type alias RowIndex =
     Int
 
 
+type alias HasVacantSlot =
+    Bool
+
+
 type alias Slot =
     { filledBy : PlayerID
     , rowIndex : RowIndex
@@ -67,7 +71,7 @@ type alias SlotUnderTest =
 
 
 type Column
-    = Column (List Slot) ColumnIndex
+    = Column (List Slot) ColumnIndex HasVacantSlot
 
 
 type alias Grid =
@@ -88,7 +92,7 @@ initialModel =
 
 initialGrid : Grid
 initialGrid =
-    List.repeat gridWidth [] |> List.indexedMap (\colIndex column -> Column column colIndex)
+    List.repeat gridWidth [] |> List.indexedMap (\colIndex column -> Column column colIndex True)
 
 
 
@@ -189,7 +193,7 @@ update msg model =
                         updatedGrid =
                             addDisk mover colIndex currentGrid
 
-                        switchedMover =
+                        nextMover =
                             case mover of
                                 One ->
                                     Two
@@ -202,7 +206,7 @@ update msg model =
                             mover
 
                          else
-                            switchedMover
+                            nextMover
                         )
                         updatedGrid
 
@@ -341,7 +345,7 @@ addDisk : PlayerID -> ColumnIndex -> Grid -> Grid
 addDisk pid targetIndex grid =
     let
         mapper : Column -> Column
-        mapper (Column slots colIndex) =
+        mapper (Column slots colIndex hasVacantSlot) =
             let
                 rowIndex =
                     List.length slots
@@ -349,11 +353,14 @@ addDisk pid targetIndex grid =
                 newSlot =
                     Slot pid rowIndex
             in
-            if colIndex == targetIndex && rowIndex < gridHeight then
-                Column (newSlot :: slots) colIndex
+            if not hasVacantSlot then
+                Column slots colIndex hasVacantSlot
+
+            else if colIndex == targetIndex then
+                Column (newSlot :: slots) colIndex (rowIndex < gridHeight - 1)
 
             else
-                Column slots colIndex
+                Column slots colIndex hasVacantSlot
     in
     List.map mapper grid
 
@@ -362,7 +369,7 @@ getHorizontalSlotsToTest : RowIndex -> Grid -> List SlotUnderTest
 getHorizontalSlotsToTest rowIndex grid =
     let
         mapper : Column -> List SlotUnderTest
-        mapper (Column slots colIndex) =
+        mapper (Column slots colIndex _) =
             slots
                 |> List.filter (\slot -> slot.rowIndex == rowIndex)
                 |> List.map (\slot -> { filledBy = slot.filledBy, index = colIndex })
@@ -376,13 +383,13 @@ getVerticalSlotsToTest : ColumnIndex -> Grid -> List SlotUnderTest
 getVerticalSlotsToTest targetIndex grid =
     let
         targetColumn =
-            List.filter (\(Column slots colIndex) -> colIndex == targetIndex) grid
+            List.filter (\(Column slots colIndex _) -> colIndex == targetIndex) grid
     in
     case targetColumn of
         [] ->
             []
 
-        (Column slots _) :: tail ->
+        (Column slots _ _) :: tail ->
             List.map (\slot -> { filledBy = slot.filledBy, index = slot.rowIndex }) slots
 
 
@@ -480,7 +487,7 @@ drawGrid players mover grid =
                 []
 
         drawColumn : Column -> H.Html Msg
-        drawColumn (Column slots colIndex) =
+        drawColumn (Column slots colIndex hasVacantSlot) =
             H.div
                 [ Attr.class "column", Attr.title "Click to add a disk", Events.onClick (AddDisk colIndex) ]
                 (List.map drawSlot slots)
