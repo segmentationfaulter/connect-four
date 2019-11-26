@@ -46,8 +46,49 @@ type alias Player =
     }
 
 
+type alias ColumnIndex =
+    Int
+
+
+type alias RowIndex =
+    Int
+
+
+type alias Slot =
+    { filledBy : PlayerID
+    , rowIndex : RowIndex
+    }
+
+
+type alias SlotUnderTest =
+    { filledBy : PlayerID
+    , index : Int
+    }
+
+
+type Column
+    = Column (List Slot) ColumnIndex
+
+
+type alias Grid =
+    List Column
+
+
+gridHeight =
+    6
+
+
+gridWidth =
+    7
+
+
 initialModel =
     ShowingDefaults ( { name = "Player1", color = "#FF0000", id = One }, { name = "Player2", color = "#0000FF", id = Two } )
+
+
+initialGrid : Grid
+initialGrid =
+    List.repeat gridWidth [] |> List.indexedMap (\colIndex column -> Column column colIndex)
 
 
 
@@ -294,47 +335,6 @@ formViewToChangeDefaults players =
 
 
 -- Grid
-
-
-gridHeight =
-    6
-
-
-gridWidth =
-    7
-
-
-type alias ColumnIndex =
-    Int
-
-
-type alias RowIndex =
-    Int
-
-
-type alias Slot =
-    { filledBy : PlayerID
-    , rowIndex : RowIndex
-    }
-
-
-type alias SlotUnderTest =
-    { filledBy : PlayerID
-    , index : Int
-    }
-
-
-type Column
-    = Column (List Slot) ColumnIndex
-
-
-type alias Grid =
-    List Column
-
-
-initialGrid : Grid
-initialGrid =
-    List.repeat gridWidth [] |> List.indexedMap (\colIndex column -> Column column colIndex)
 
 
 addDisk : PlayerID -> ColumnIndex -> Grid -> Grid
