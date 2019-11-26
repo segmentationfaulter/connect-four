@@ -137,19 +137,33 @@ update msg model =
 
         AddDisk colIndex ->
             case model of
-                ShowingDefaults _ -> model
-                ShowingFormToChangeDefaults _ -> model
+                ShowingDefaults _ ->
+                    model
+
+                ShowingFormToChangeDefaults _ ->
+                    model
+
                 ShowingGameBoard players mover currentGrid ->
                     let
-                        updatedGrid = addDisk mover colIndex currentGrid
+                        updatedGrid =
+                            addDisk mover colIndex currentGrid
+
                         switchedMover =
                             case mover of
-                                One -> Two
-                                Two -> One
-                    in
-                    ShowingGameBoard players (if updatedGrid == currentGrid then mover else switchedMover) updatedGrid
-                    
+                                One ->
+                                    Two
 
+                                Two ->
+                                    One
+                    in
+                    ShowingGameBoard players
+                        (if updatedGrid == currentGrid then
+                            mover
+
+                         else
+                            switchedMover
+                        )
+                        updatedGrid
 
 
 
@@ -166,7 +180,11 @@ view model =
             formViewToChangeDefaults players
 
         ShowingGameBoard players mover grid ->
-            drawGrid grid players
+            H.div
+                [ Attr.class "game-view" ]
+                [ drawGrid players mover grid
+                , moveInfo players mover grid
+                ]
 
 
 
@@ -448,15 +466,15 @@ wonAgainstSlotsUnderTest slots =
         False
 
 
-drawGrid : Grid -> Players -> H.Html Msg
-drawGrid grid players =
+drawGrid : Players -> PlayerID -> Grid -> H.Html Msg
+drawGrid players mover grid =
     let
         drawSlot : Slot -> H.Html Msg
         drawSlot slot =
             let
-                { color } = getPlayerById slot.filledBy players
+                { color } =
+                    getPlayerById slot.filledBy players
             in
-            
             H.div
                 [ Attr.class "slot", Attr.style "border-color" color ]
                 []
@@ -464,12 +482,20 @@ drawGrid grid players =
         drawColumn : Column -> H.Html Msg
         drawColumn (Column slots colIndex) =
             H.div
-                [ Attr.class "column", Attr.title "Click to add a disk", Events.onClick (AddDisk colIndex)]
+                [ Attr.class "column", Attr.title "Click to add a disk", Events.onClick (AddDisk colIndex) ]
                 (List.map drawSlot slots)
     in
     H.div
         [ Attr.class "grid" ]
         (List.map drawColumn grid)
+
+
+moveInfo : Players -> PlayerID -> Grid -> H.Html Msg
+moveInfo players mover grid =
+    H.div
+        [ Attr.class "move-info" ]
+        [ H.div [] [ H.text ("Next Mover: " ++ .name (getPlayerById mover players)) ]
+        ]
 
 
 
@@ -485,8 +511,12 @@ mapPlayerIdToNumber id =
         Two ->
             2
 
+
 getPlayerById : PlayerID -> Players -> Player
 getPlayerById pid players =
     case pid of
-        One -> Tuple.first players 
-        Two -> Tuple.second players
+        One ->
+            Tuple.first players
+
+        Two ->
+            Tuple.second players
