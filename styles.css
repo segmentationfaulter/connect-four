@@ -29,6 +29,10 @@
     cursor: pointer;
 }
 
+.column.filled {
+    pointer-events: none;
+}
+
 .column:last-child {
     border-right: none;
 }
