@@ -59,6 +59,7 @@ type Msg
     | PlayerNameChanged PlayerID String
     | PlayerColorChanged PlayerID String
     | ProceedToPlay
+    | AddDisk ColumnIndex
 
 
 update : Msg -> Model -> Model
@@ -133,6 +134,22 @@ update msg model =
 
                 ShowingGameBoard _ _ _ ->
                     model
+
+        AddDisk colIndex ->
+            case model of
+                ShowingDefaults _ -> model
+                ShowingFormToChangeDefaults _ -> model
+                ShowingGameBoard players mover currentGrid ->
+                    let
+                        updatedGrid = addDisk mover colIndex currentGrid
+                        switchedMover =
+                            case mover of
+                                One -> Two
+                                Two -> One
+                    in
+                    ShowingGameBoard players switchedMover updatedGrid
+                    
+
 
 
 
@@ -278,13 +295,13 @@ type alias RowIndex =
 
 
 type alias Slot =
-    { filledBy : Player
+    { filledBy : PlayerID
     , rowIndex : RowIndex
     }
 
 
 type alias SlotUnderTest =
-    { filledBy : Player
+    { filledBy : PlayerID
     , index : Int
     }
 
@@ -302,8 +319,8 @@ initialGrid =
     List.repeat gridWidth [] |> List.indexedMap (\colIndex column -> Column column colIndex)
 
 
-addDisk : Player -> ColumnIndex -> Grid -> Grid
-addDisk player targetIndex grid =
+addDisk : PlayerID -> ColumnIndex -> Grid -> Grid
+addDisk pid targetIndex grid =
     let
         mapper : Column -> Column
         mapper (Column slots colIndex) =
@@ -312,7 +329,7 @@ addDisk player targetIndex grid =
                     List.length slots
 
                 newSlot =
-                    Slot player rowIndex
+                    Slot pid rowIndex
             in
             if colIndex == targetIndex then
                 Column (newSlot :: slots) colIndex
@@ -446,7 +463,7 @@ drawGrid grid =
         drawColumn : Column -> H.Html Msg
         drawColumn (Column slots colIndex) =
             H.div
-                [ Attr.class "column", Attr.title "Click to add a disk" ]
+                [ Attr.class "column", Attr.title "Click to add a disk", Events.onClick (AddDisk colIndex)]
                 (List.map drawSlot slots)
     in
     H.div
