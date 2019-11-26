@@ -147,7 +147,7 @@ update msg model =
                                 One -> Two
                                 Two -> One
                     in
-                    ShowingGameBoard players switchedMover updatedGrid
+                    ShowingGameBoard players (if updatedGrid == currentGrid then mover else switchedMover) updatedGrid
                     
 
 
@@ -331,7 +331,7 @@ addDisk pid targetIndex grid =
                 newSlot =
                     Slot pid rowIndex
             in
-            if colIndex == targetIndex then
+            if colIndex == targetIndex && rowIndex < gridHeight then
                 Column (newSlot :: slots) colIndex
 
             else
