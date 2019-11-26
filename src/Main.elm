@@ -100,7 +100,8 @@ initialGrid =
 
 
 type Msg
-    = ProceedToChangeDefaults
+    = NoOp
+    | ProceedToChangeDefaults
     | PlayerNameChanged PlayerID String
     | PlayerColorChanged PlayerID String
     | ProceedToPlay
@@ -110,6 +111,9 @@ type Msg
 update : Msg -> Model -> Model
 update msg model =
     case msg of
+        NoOp ->
+            model
+
         ProceedToChangeDefaults ->
             case model of
                 ShowingDefaults players ->
@@ -201,14 +205,7 @@ update msg model =
                                 Two ->
                                     One
                     in
-                    ShowingGameBoard players
-                        (if updatedGrid == currentGrid then
-                            mover
-
-                         else
-                            nextMover
-                        )
-                        updatedGrid
+                    ShowingGameBoard players nextMover updatedGrid
 
 
 
@@ -489,7 +486,16 @@ drawGrid players mover grid =
         drawColumn : Column -> H.Html Msg
         drawColumn (Column slots colIndex hasVacantSlot) =
             H.div
-                [ Attr.class "column", Attr.title "Click to add a disk", Events.onClick (AddDisk colIndex) ]
+                [ Attr.class "column"
+                , Attr.title "Click to add a disk"
+                , Events.onClick
+                    (if hasVacantSlot then
+                        AddDisk colIndex
+
+                     else
+                        NoOp
+                    )
+                ]
                 (List.map drawSlot slots)
     in
     H.div
