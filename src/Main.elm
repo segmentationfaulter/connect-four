@@ -402,8 +402,9 @@ getHorizontalSlotsToTest rowIndex pid grid =
 getVerticalSlotsToTest : PlayerID -> List Slot -> List SlotUnderTest
 getVerticalSlotsToTest pid slots =
     slots
-    |> List.map (\slot -> { filledBy = slot.filledBy, index = slot.rowIndex }) 
-    |> List.filter (\slot -> slot.filledBy == pid)
+        |> List.map (\slot -> { filledBy = slot.filledBy, index = slot.rowIndex })
+        |> List.filter (\slot -> slot.filledBy == pid)
+
 
 
 -- Right diagonal is the one which links bottom left to top right
@@ -457,6 +458,25 @@ getIndexesOfLeftDiagonal targetColumnIndex targetRowIndex =
     lowerHalfOfIndexes (targetColumnIndex + 1) (targetRowIndex - 1) [] ++ upperHalfOfIndexes targetColumnIndex targetRowIndex []
 
 
+getSlotsToTestOnDiagonal : List ( ColumnIndex, RowIndex ) -> PlayerID -> Grid -> List SlotUnderTest
+getSlotsToTestOnDiagonal indices pid grid =
+    let
+        ( columnIndices, rowIndices ) =
+            List.unzip indices
+
+        targetColumns =
+            List.filter (\(Column _ colIndex) -> List.member colIndex columnIndices) grid
+
+        mapper : Column -> RowIndex -> List SlotUnderTest
+        mapper (Column slots colIndex) rowIndex =
+            slots
+                |> List.filter (\slot -> slot.rowIndex == rowIndex && slot.filledBy == pid)
+                |> List.map (\slot -> { filledBy = slot.filledBy, index = colIndex })
+    in
+    List.map2 mapper targetColumns rowIndices
+        |> List.concat
+
+
 wonAgainstSlotsUnderTest : List SlotUnderTest -> Bool
 wonAgainstSlotsUnderTest slots =
     let
@@ -505,20 +525,38 @@ didMoverWonIt targetColumnIndex pid grid =
 
             else
                 wonAgainstSlotsUnderTest horizontalSlotsToTest
-                
+
         verticalSlotsToTest =
             case targetColumnInList of
-                [] -> []
+                [] ->
+                    []
+
                 (Column slots _) :: tail ->
                     getVerticalSlotsToTest pid slots
 
         verticalWinningCombinationIsPresent =
             if List.length verticalSlotsToTest < winningStreak then
                 False
+
             else
                 wonAgainstSlotsUnderTest verticalSlotsToTest
+
+        rightDiagonalSlotsToTest =
+            let
+                rightDiagonalIndices =
+                    case targetColumnInList of
+                        [] ->
+                            []
+
+                        (Column slots _) :: tail ->
+                            getIndexesOfRightDiagonal targetColumnIndex (List.length slots - 1)
+            in
+            getSlotsToTestOnDiagonal rightDiagonalIndices pid grid
+
+        rightDiagonalWinningCombinationPresent =
+            wonAgainstSlotsUnderTest rightDiagonalSlotsToTest
     in
-    horizontalWinningCombinationIsPresent || verticalWinningCombinationIsPresent
+    horizontalWinningCombinationIsPresent || verticalWinningCombinationIsPresent || rightDiagonalWinningCombinationPresent
 
 
 drawGrid : Players -> GameState -> Grid -> H.Html Msg
