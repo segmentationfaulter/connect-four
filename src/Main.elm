@@ -399,19 +399,11 @@ getHorizontalSlotsToTest rowIndex pid grid =
         |> List.concat
 
 
-getVerticalSlotsToTest : ColumnIndex -> Grid -> List SlotUnderTest
-getVerticalSlotsToTest targetIndex grid =
-    let
-        targetColumn =
-            List.filter (\(Column slots colIndex) -> colIndex == targetIndex) grid
-    in
-    case targetColumn of
-        [] ->
-            []
-
-        (Column slots _) :: tail ->
-            List.map (\slot -> { filledBy = slot.filledBy, index = slot.rowIndex }) slots
-
+getVerticalSlotsToTest : PlayerID -> List Slot -> List SlotUnderTest
+getVerticalSlotsToTest pid slots =
+    slots
+    |> List.map (\slot -> { filledBy = slot.filledBy, index = slot.rowIndex }) 
+    |> List.filter (\slot -> slot.filledBy == pid)
 
 
 -- Right diagonal is the one which links bottom left to top right
@@ -518,7 +510,7 @@ didMoverWonIt targetColumnIndex pid grid =
             case targetColumnInList of
                 [] -> []
                 (Column slots _) :: tail ->
-                    getVerticalSlotsToTest targetColumnIndex grid
+                    getVerticalSlotsToTest pid slots
 
         verticalWinningCombinationIsPresent =
             if List.length verticalSlotsToTest < winningStreak then
