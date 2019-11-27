@@ -23,7 +23,7 @@ main =
 type Model
     = ShowingDefaults Players
     | ShowingFormToChangeDefaults Players
-    | ShowingGameBoard Players Mover Grid
+    | ShowingGameBoard Players GameState Grid
 
 
 type alias Players =
@@ -35,8 +35,10 @@ type PlayerID
     | Two
 
 
-type alias Mover =
-    Maybe PlayerID
+type GameState
+    = NextMover PlayerID
+    | Winner PlayerID
+    | Draw
 
 
 type alias Player =
@@ -176,10 +178,10 @@ update msg model =
         ProceedToPlay ->
             case model of
                 ShowingDefaults players ->
-                    ShowingGameBoard players (Just One) initialGrid
+                    ShowingGameBoard players (NextMover One) initialGrid
 
                 ShowingFormToChangeDefaults players ->
-                    ShowingGameBoard players (Just One) initialGrid
+                    ShowingGameBoard players (NextMover One) initialGrid
 
                 ShowingGameBoard _ _ _ ->
                     model
@@ -192,42 +194,41 @@ update msg model =
                 ShowingFormToChangeDefaults _ ->
                     model
 
-                ShowingGameBoard players mover currentGrid ->
-                    let
-                        updatedGrid =
-                            case mover of
-                                Just pid ->
+                ShowingGameBoard players gameState currentGrid ->
+                    case gameState of
+                        NextMover pid ->
+                            let
+                                updatedGrid =
                                     addDisk pid colIndex currentGrid
 
-                                Nothing ->
-                                    currentGrid
-
-                        moverWon =
-                            case mover of
-                                Just pid ->
+                                moverWonIt =
                                     didMoverWonIt colIndex pid updatedGrid
 
-                                Nothing ->
-                                    False
+                                slotsVacantInGrid =
+                                    List.any (\(Column slots _ _) -> List.length slots < gridHeight) updatedGrid
 
-                        nextMover =
-                            if moverWon then
-                                Nothing
+                                nextMover =
+                                    case pid of
+                                        One ->
+                                            Two
+
+                                        Two ->
+                                            One
+                            in
+                            if moverWonIt then
+                                ShowingGameBoard players (Winner pid) updatedGrid
+
+                            else if not moverWonIt && slotsVacantInGrid then
+                                ShowingGameBoard players (NextMover nextMover) updatedGrid
 
                             else
-                                case mover of
-                                    Just pid ->
-                                        case pid of
-                                            One ->
-                                                Just Two
+                                ShowingGameBoard players Draw updatedGrid
 
-                                            Two ->
-                                                Just One
+                        Draw ->
+                            model
 
-                                    Nothing ->
-                                        Nothing
-                    in
-                    ShowingGameBoard players nextMover updatedGrid
+                        Winner _ ->
+                            model
 
 
 
@@ -247,7 +248,7 @@ view model =
             H.div
                 [ Attr.class "game-view" ]
                 [ drawGrid players mover grid
-                , moveInfo players mover grid
+                , gameInfo players mover grid
                 ]
 
 
@@ -513,8 +514,8 @@ didMoverWonIt targetColumnIndex pid grid =
     horizontalWinningCombinationIsPresent
 
 
-drawGrid : Players -> Mover -> Grid -> H.Html Msg
-drawGrid players mover grid =
+drawGrid : Players -> GameState -> Grid -> H.Html Msg
+drawGrid players gameState grid =
     let
         drawSlot : Slot -> H.Html Msg
         drawSlot slot =
@@ -536,11 +537,14 @@ drawGrid players mover grid =
                 (List.map drawSlot slots)
 
         isTheGameOver =
-            case mover of
-                Just pid ->
+            case gameState of
+                NextMover _ ->
                     False
 
-                Nothing ->
+                Draw ->
+                    True
+
+                Winner _ ->
                     True
     in
     H.div
@@ -548,17 +552,23 @@ drawGrid players mover grid =
         (List.map drawColumn grid)
 
 
-moveInfo : Players -> Mover -> Grid -> H.Html Msg
-moveInfo players mover grid =
-    case mover of
-        Just pid ->
-            H.div
-                [ Attr.class "move-info" ]
-                [ H.div [] [ H.text ("Next Mover: " ++ .name (getPlayerById pid players)) ]
-                ]
+gameInfo : Players -> GameState -> Grid -> H.Html Msg
+gameInfo players gameState _ =
+    let
+        info =
+            case gameState of
+                NextMover pid ->
+                    H.text ("Next mover: " ++ .name (getPlayerById pid players))
 
-        Nothing ->
-            H.text "Game over"
+                Winner pid ->
+                    H.text (.name (getPlayerById pid players) ++ " won it!")
+
+                Draw ->
+                    H.text "Game over, it was a draw!"
+    in
+    H.div
+        [ Attr.class "game-info" ]
+        [ info ]
 
 
 
