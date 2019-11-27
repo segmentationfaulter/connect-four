@@ -513,8 +513,20 @@ didMoverWonIt targetColumnIndex pid grid =
 
             else
                 wonAgainstSlotsUnderTest horizontalSlotsToTest
+                
+        verticalSlotsToTest =
+            case targetColumnInList of
+                [] -> []
+                (Column slots _) :: tail ->
+                    getVerticalSlotsToTest targetColumnIndex grid
+
+        verticalWinningCombinationIsPresent =
+            if List.length verticalSlotsToTest < winningStreak then
+                False
+            else
+                wonAgainstSlotsUnderTest verticalSlotsToTest
     in
-    horizontalWinningCombinationIsPresent
+    horizontalWinningCombinationIsPresent || verticalWinningCombinationIsPresent
 
 
 drawGrid : Players -> GameState -> Grid -> H.Html Msg
