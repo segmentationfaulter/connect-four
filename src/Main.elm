@@ -73,7 +73,7 @@ type alias SlotUnderTest =
 
 
 type Column
-    = Column (List Slot) ColumnIndex LastInsertionMadeAt
+    = Column (List Slot) ColumnIndex
 
 
 type alias Grid =
@@ -98,7 +98,7 @@ initialModel =
 
 initialGrid : Grid
 initialGrid =
-    List.repeat gridWidth [] |> List.indexedMap (\colIndex column -> Column column colIndex -1)
+    List.repeat gridWidth [] |> List.indexedMap (\colIndex column -> Column column colIndex)
 
 
 
@@ -205,7 +205,7 @@ update msg model =
                                     didMoverWonIt colIndex pid updatedGrid
 
                                 slotsVacantInGrid =
-                                    List.any (\(Column slots _ _) -> List.length slots < gridHeight) updatedGrid
+                                    List.any (\(Column slots _) -> List.length slots < gridHeight) updatedGrid
 
                                 nextMover =
                                     case pid of
@@ -365,19 +365,22 @@ addDisk : PlayerID -> ColumnIndex -> Grid -> Grid
 addDisk pid targetIndex grid =
     let
         mapper : Column -> Column
-        mapper (Column slots colIndex lastInsertionMadeAt) =
+        mapper (Column slots colIndex) =
             let
+                occupiedSlots =
+                    List.length slots
+
                 newSlot =
-                    Slot pid (lastInsertionMadeAt + 1)
+                    Slot pid occupiedSlots
 
                 hasVacantSlot =
-                    lastInsertionMadeAt < gridHeight - 1
+                    occupiedSlots < gridHeight
             in
             if colIndex == targetIndex && hasVacantSlot then
-                Column (newSlot :: slots) colIndex (lastInsertionMadeAt + 1)
+                Column (newSlot :: slots) colIndex
 
             else
-                Column slots colIndex lastInsertionMadeAt
+                Column slots colIndex
     in
     List.map mapper grid
 
@@ -386,7 +389,7 @@ getHorizontalSlotsToTest : RowIndex -> PlayerID -> Grid -> List SlotUnderTest
 getHorizontalSlotsToTest rowIndex pid grid =
     let
         mapper : Column -> List SlotUnderTest
-        mapper (Column slots colIndex _) =
+        mapper (Column slots colIndex) =
             slots
                 |> List.filter (\slot -> slot.rowIndex == rowIndex && slot.filledBy == pid)
                 |> List.map (\slot -> { filledBy = slot.filledBy, index = colIndex })
@@ -400,13 +403,13 @@ getVerticalSlotsToTest : ColumnIndex -> Grid -> List SlotUnderTest
 getVerticalSlotsToTest targetIndex grid =
     let
         targetColumn =
-            List.filter (\(Column slots colIndex _) -> colIndex == targetIndex) grid
+            List.filter (\(Column slots colIndex) -> colIndex == targetIndex) grid
     in
     case targetColumn of
         [] ->
             []
 
-        (Column slots _ _) :: tail ->
+        (Column slots _) :: tail ->
             List.map (\slot -> { filledBy = slot.filledBy, index = slot.rowIndex }) slots
 
 
@@ -494,15 +497,15 @@ didMoverWonIt : ColumnIndex -> PlayerID -> Grid -> Bool
 didMoverWonIt targetColumnIndex pid grid =
     let
         targetColumnInList =
-            List.filter (\(Column _ colIndex _) -> colIndex == targetColumnIndex) grid
+            List.filter (\(Column _ colIndex) -> colIndex == targetColumnIndex) grid
 
         horizontalSlotsToTest =
             case targetColumnInList of
                 [] ->
                     []
 
-                (Column _ _ lastInsertionMadeAt) :: tail ->
-                    getHorizontalSlotsToTest lastInsertionMadeAt pid grid
+                (Column slots _) :: tail ->
+                    getHorizontalSlotsToTest (List.length slots - 1) pid grid
 
         horizontalWinningCombinationIsPresent =
             if List.length horizontalSlotsToTest < winningStreak then
@@ -528,9 +531,9 @@ drawGrid players gameState grid =
                 []
 
         drawColumn : Column -> H.Html Msg
-        drawColumn (Column slots colIndex lastInsertionMadeAt) =
+        drawColumn (Column slots colIndex) =
             H.div
-                [ Attr.classList [ ( "column", True ), ( "filled", lastInsertionMadeAt == gridHeight - 1 ) ]
+                [ Attr.classList [ ( "column", True ), ( "filled", List.length slots == gridHeight ) ]
                 , Attr.title "Click to add a disk"
                 , Events.onClick (AddDisk colIndex)
                 ]
