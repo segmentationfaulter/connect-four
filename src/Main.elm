@@ -86,6 +86,10 @@ gridWidth =
     7
 
 
+winningStreak =
+    4
+
+
 initialModel =
     ShowingDefaults ( { name = "Player1", color = "#FF0000", id = One }, { name = "Player2", color = "#0000FF", id = Two } )
 
@@ -198,18 +202,30 @@ update msg model =
                                 Nothing ->
                                     currentGrid
 
-                        nextMover =
+                        moverWon =
                             case mover of
                                 Just pid ->
-                                    case pid of
-                                        One ->
-                                            Just Two
-
-                                        Two ->
-                                            Just One
+                                    didMoverWonIt colIndex pid updatedGrid
 
                                 Nothing ->
-                                    Nothing
+                                    False
+
+                        nextMover =
+                            if moverWon then
+                                Nothing
+
+                            else
+                                case mover of
+                                    Just pid ->
+                                        case pid of
+                                            One ->
+                                                Just Two
+
+                                            Two ->
+                                                Just One
+
+                                    Nothing ->
+                                        Nothing
                     in
                     ShowingGameBoard players nextMover updatedGrid
 
@@ -365,13 +381,13 @@ addDisk pid targetIndex grid =
     List.map mapper grid
 
 
-getHorizontalSlotsToTest : RowIndex -> Grid -> List SlotUnderTest
-getHorizontalSlotsToTest rowIndex grid =
+getHorizontalSlotsToTest : RowIndex -> PlayerID -> Grid -> List SlotUnderTest
+getHorizontalSlotsToTest rowIndex pid grid =
     let
         mapper : Column -> List SlotUnderTest
         mapper (Column slots colIndex _) =
             slots
-                |> List.filter (\slot -> slot.rowIndex == rowIndex)
+                |> List.filter (\slot -> slot.rowIndex == rowIndex && slot.filledBy == pid)
                 |> List.map (\slot -> { filledBy = slot.filledBy, index = colIndex })
     in
     grid
@@ -473,13 +489,28 @@ wonAgainstSlotsUnderTest slots =
         False
 
 
-didMoverWonIt : RowIndex -> ColumnIndex -> Grid -> Bool
-didMoverWonIt targetRowIndex targetColumnIndex grid =
+didMoverWonIt : ColumnIndex -> PlayerID -> Grid -> Bool
+didMoverWonIt targetColumnIndex pid grid =
     let
+        targetColumnInList =
+            List.filter (\(Column _ colIndex _) -> colIndex == targetColumnIndex) grid
+
         horizontalSlotsToTest =
-            getHorizontalSlotsToTest targetRowIndex grid
+            case targetColumnInList of
+                [] ->
+                    []
+
+                (Column _ _ lastInsertionMadeAt) :: tail ->
+                    getHorizontalSlotsToTest lastInsertionMadeAt pid grid
+
+        horizontalWinningCombinationIsPresent =
+            if List.length horizontalSlotsToTest < winningStreak then
+                False
+
+            else
+                wonAgainstSlotsUnderTest horizontalSlotsToTest
     in
-    wonAgainstSlotsUnderTest horizontalSlotsToTest
+    horizontalWinningCombinationIsPresent
 
 
 drawGrid : Players -> Mover -> Grid -> H.Html Msg
