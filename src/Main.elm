@@ -5,6 +5,7 @@ import Html as H
 import Html.Attributes as Attr
 import Html.Events as Events
 import String
+import Time
 import Tuple
 
 
@@ -19,6 +20,7 @@ main =
 
 
 -- Model
+-- TODO: Unify both of the states about start screen
 
 
 type Model
@@ -113,7 +115,20 @@ initialGrid =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    case model of
+        ShowingGameBoard _ gameState _ ->
+            case gameState of
+                NextMover _ ->
+                    Time.every 1000 Tick
+
+                _ ->
+                    Sub.none
+
+        ShowingDefaults _ ->
+            Sub.none
+
+        ShowingFormToChangeDefaults _ ->
+            Sub.none
 
 
 
@@ -126,6 +141,7 @@ type Msg
     | PlayerColorChanged PlayerID String
     | ProceedToPlay
     | AddDisk ColumnIndex
+    | Tick Time.Posix
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -244,6 +260,9 @@ update msg model =
 
                         Winner _ ->
                             ( model, Cmd.none )
+
+        Tick posixTime ->
+            ( model, Cmd.none )
 
 
 
