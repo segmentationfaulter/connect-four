@@ -442,7 +442,7 @@ getIndexesOfLeftDiagonal targetColumnIndex targetRowIndex =
         upperHalfOfIndexes : ColumnIndex -> RowIndex -> List ( ColumnIndex, RowIndex ) -> List ( ColumnIndex, RowIndex )
         upperHalfOfIndexes colIndex rowIndex accumulator =
             if colIndex > -1 && rowIndex < gridHeight then
-                upperHalfOfIndexes (colIndex - 1) (rowIndex + 1) (accumulator ++ [ ( colIndex, rowIndex ) ])
+                upperHalfOfIndexes (colIndex - 1) (rowIndex + 1) (( colIndex, rowIndex ) :: accumulator)
 
             else
                 accumulator
@@ -450,13 +450,12 @@ getIndexesOfLeftDiagonal targetColumnIndex targetRowIndex =
         lowerHalfOfIndexes : ColumnIndex -> RowIndex -> List ( ColumnIndex, RowIndex ) -> List ( ColumnIndex, RowIndex )
         lowerHalfOfIndexes colIndex rowIndex accumulator =
             if colIndex < gridWidth && rowIndex > -1 then
-                lowerHalfOfIndexes (colIndex + 1) (rowIndex - 1) (( colIndex, rowIndex ) :: accumulator)
+                lowerHalfOfIndexes (colIndex + 1) (rowIndex - 1) (accumulator ++ [ ( colIndex, rowIndex ) ])
 
             else
                 accumulator
     in
-    lowerHalfOfIndexes (targetColumnIndex + 1) (targetRowIndex - 1) [] ++ upperHalfOfIndexes targetColumnIndex targetRowIndex []
-    |> List.reverse
+    upperHalfOfIndexes targetColumnIndex targetRowIndex [] ++ lowerHalfOfIndexes (targetColumnIndex + 1) (targetRowIndex - 1) []
 
 
 getSlotsToTestOnDiagonal : List ( ColumnIndex, RowIndex ) -> PlayerID -> Grid -> List SlotUnderTest
