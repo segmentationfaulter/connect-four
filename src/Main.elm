@@ -456,6 +456,7 @@ getIndexesOfLeftDiagonal targetColumnIndex targetRowIndex =
                 accumulator
     in
     lowerHalfOfIndexes (targetColumnIndex + 1) (targetRowIndex - 1) [] ++ upperHalfOfIndexes targetColumnIndex targetRowIndex []
+    |> List.reverse
 
 
 getSlotsToTestOnDiagonal : List ( ColumnIndex, RowIndex ) -> PlayerID -> Grid -> List SlotUnderTest
@@ -555,8 +556,24 @@ didMoverWonIt targetColumnIndex pid grid =
 
         rightDiagonalWinningCombinationPresent =
             wonAgainstSlotsUnderTest rightDiagonalSlotsToTest
+
+        leftDiagonalSlotsToTest : List SlotUnderTest
+        leftDiagonalSlotsToTest =
+            let
+                leftDiagonalIndices =
+                    case targetColumnInList of
+                        [] ->
+                            []
+
+                        (Column slots _) :: tail ->
+                            getIndexesOfLeftDiagonal targetColumnIndex (List.length slots - 1)
+            in
+            getSlotsToTestOnDiagonal leftDiagonalIndices pid grid
+
+        leftDiagonalWinningCombinationPresent =
+            wonAgainstSlotsUnderTest leftDiagonalSlotsToTest
     in
-    horizontalWinningCombinationIsPresent || verticalWinningCombinationIsPresent || rightDiagonalWinningCombinationPresent
+    horizontalWinningCombinationIsPresent || verticalWinningCombinationIsPresent || rightDiagonalWinningCombinationPresent || leftDiagonalWinningCombinationPresent
 
 
 drawGrid : Players -> GameState -> Grid -> H.Html Msg
