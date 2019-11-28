@@ -39,11 +39,8 @@ type PlayerID
 
 
 
--- TODO: NextMover should be renamed, it is current mover I think
-
-
 type GameState
-    = NextMover PlayerID
+    = CurrentMover PlayerID
     | Winner PlayerID
     | Draw
 
@@ -119,7 +116,7 @@ subscriptions model =
     case model of
         ShowingGameBoard _ gameState _ ->
             case gameState of
-                NextMover _ ->
+                CurrentMover _ ->
                     Time.every 1000 Tick
 
                 _ ->
@@ -210,10 +207,10 @@ update msg model =
         ProceedToPlay ->
             case model of
                 ShowingDefaults players ->
-                    ( ShowingGameBoard players (NextMover One) initialGrid, Cmd.none )
+                    ( ShowingGameBoard players (CurrentMover One) initialGrid, Cmd.none )
 
                 ShowingFormToChangeDefaults players ->
-                    ( ShowingGameBoard players (NextMover One) initialGrid, Cmd.none )
+                    ( ShowingGameBoard players (CurrentMover One) initialGrid, Cmd.none )
 
                 ShowingGameBoard _ _ _ ->
                     ( model, Cmd.none )
@@ -228,7 +225,7 @@ update msg model =
 
                 ShowingGameBoard players gameState currentGrid ->
                     case gameState of
-                        NextMover pid ->
+                        CurrentMover pid ->
                             let
                                 updatedGrid =
                                     addDisk pid colIndex currentGrid
@@ -251,7 +248,7 @@ update msg model =
                                 ( ShowingGameBoard players (Winner pid) updatedGrid, Cmd.none )
 
                             else if not moverWonIt && slotsVacantInGrid then
-                                ( ShowingGameBoard players (NextMover nextMover) updatedGrid, Cmd.none )
+                                ( ShowingGameBoard players (CurrentMover nextMover) updatedGrid, Cmd.none )
 
                             else
                                 ( ShowingGameBoard players Draw updatedGrid, Cmd.none )
@@ -272,7 +269,7 @@ update msg model =
 
                 ShowingGameBoard ( p1, p2 ) gameState grid ->
                     case gameState of
-                        NextMover pid ->
+                        CurrentMover pid ->
                             case pid of
                                 One ->
                                     ( ShowingGameBoard ( { p1 | timeElapsed = p1.timeElapsed + 1 }, p2 ) gameState grid, Cmd.none )
@@ -658,7 +655,7 @@ drawGrid players gameState grid =
 
         isTheGameOver =
             case gameState of
-                NextMover _ ->
+                CurrentMover _ ->
                     False
 
                 Draw ->
@@ -677,7 +674,7 @@ gameInfo players gameState _ =
     let
         info =
             case gameState of
-                NextMover pid ->
+                CurrentMover pid ->
                     H.text ("Next mover: " ++ .name (getPlayerById pid players))
 
                 Winner pid ->
