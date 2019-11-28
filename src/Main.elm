@@ -38,6 +38,10 @@ type PlayerID
     | Two
 
 
+
+-- TODO: NextMover should be renamed, it is current mover I think
+
+
 type GameState
     = NextMover PlayerID
     | Winner PlayerID
@@ -48,6 +52,7 @@ type alias Player =
     { name : String
     , color : String
     , id : PlayerID
+    , timeElapsed : Int
     }
 
 
@@ -97,7 +102,7 @@ winningStreak =
 
 init : () -> ( Model, Cmd Msg )
 init () =
-    ( ShowingDefaults ( { name = "Player1", color = "#FF0000", id = One }, { name = "Player2", color = "#0000FF", id = Two } ), Cmd.none )
+    ( ShowingDefaults ( { name = "Player1", color = "#FF0000", id = One, timeElapsed = 0 }, { name = "Player2", color = "#0000FF", id = Two, timeElapsed = 0 } ), Cmd.none )
 
 
 initialGrid : Grid
@@ -258,7 +263,28 @@ update msg model =
                             ( model, Cmd.none )
 
         Tick posixTime ->
-            ( model, Cmd.none )
+            case model of
+                ShowingFormToChangeDefaults _ ->
+                    ( model, Cmd.none )
+
+                ShowingDefaults _ ->
+                    ( model, Cmd.none )
+
+                ShowingGameBoard ( p1, p2 ) gameState grid ->
+                    case gameState of
+                        NextMover pid ->
+                            case pid of
+                                One ->
+                                    ( ShowingGameBoard ( { p1 | timeElapsed = p1.timeElapsed + 1 }, p2 ) gameState grid, Cmd.none )
+
+                                Two ->
+                                    ( ShowingGameBoard ( p1, { p2 | timeElapsed = p2.timeElapsed + 1 } ) gameState grid, Cmd.none )
+
+                        Winner _ ->
+                            ( model, Cmd.none )
+
+                        Draw ->
+                            ( model, Cmd.none )
 
 
 
