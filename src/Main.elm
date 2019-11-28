@@ -66,6 +66,7 @@ type alias Slot =
     }
 
 
+-- TODO: Apparently, filledBy field is not needed here
 type alias SlotUnderTest =
     { filledBy : PlayerID
     , index : Int
@@ -410,6 +411,8 @@ getVerticalSlotsToTest pid slots =
 -- Right diagonal is the one which links bottom left to top right
 
 
+-- TODO: indexes should be renamed to indices
+
 getIndexesOfRightDiagonal : ColumnIndex -> RowIndex -> List ( ColumnIndex, RowIndex )
 getIndexesOfRightDiagonal targetColumnIndex targetRowIndex =
     let
@@ -464,6 +467,7 @@ getSlotsToTestOnDiagonal indices pid grid =
         ( columnIndices, rowIndices ) =
             List.unzip indices
 
+        -- TODO: We shouldn't need to find targetColumns, we can directly map2
         targetColumns =
             List.filter (\(Column _ colIndex) -> List.member colIndex columnIndices) grid
 
@@ -508,6 +512,7 @@ wonAgainstSlotsUnderTest slots =
 didMoverWonIt : ColumnIndex -> PlayerID -> Grid -> Bool
 didMoverWonIt targetColumnIndex pid grid =
     let
+        -- TODO: rowIndex is being calculated repeatedly here, getting it once should be enough
         targetColumnInList =
             List.filter (\(Column _ colIndex) -> colIndex == targetColumnIndex) grid
 
