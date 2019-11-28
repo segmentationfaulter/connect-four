@@ -9,10 +9,11 @@ import Tuple
 
 
 main =
-    Browser.sandbox
-        { init = initialModel
+    Browser.element
+        { init = init
         , update = update
         , view = view
+        , subscriptions = subscriptions
         }
 
 
@@ -66,7 +67,10 @@ type alias Slot =
     }
 
 
+
 -- TODO: Apparently, filledBy field is not needed here
+
+
 type alias SlotUnderTest =
     { filledBy : PlayerID
     , index : Int
@@ -93,13 +97,23 @@ winningStreak =
     4
 
 
-initialModel =
-    ShowingDefaults ( { name = "Player1", color = "#FF0000", id = One }, { name = "Player2", color = "#0000FF", id = Two } )
+init : () -> ( Model, Cmd Msg )
+init () =
+    ( ShowingDefaults ( { name = "Player1", color = "#FF0000", id = One }, { name = "Player2", color = "#0000FF", id = Two } ), Cmd.none )
 
 
 initialGrid : Grid
 initialGrid =
     List.repeat gridWidth [] |> List.indexedMap (\colIndex column -> Column column colIndex)
+
+
+
+-- Subscription
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
 
 
 
@@ -114,86 +128,86 @@ type Msg
     | AddDisk ColumnIndex
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ProceedToChangeDefaults ->
             case model of
                 ShowingDefaults players ->
-                    ShowingFormToChangeDefaults players
+                    ( ShowingFormToChangeDefaults players, Cmd.none )
 
                 ShowingFormToChangeDefaults players ->
-                    model
+                    ( model, Cmd.none )
 
                 ShowingGameBoard _ _ _ ->
-                    model
+                    ( model, Cmd.none )
 
         PlayerNameChanged id name ->
             case id of
                 One ->
                     case model of
                         ShowingDefaults _ ->
-                            model
+                            ( model, Cmd.none )
 
                         ShowingFormToChangeDefaults ( p1, p2 ) ->
-                            ShowingFormToChangeDefaults ( { p1 | name = name }, p2 )
+                            ( ShowingFormToChangeDefaults ( { p1 | name = name }, p2 ), Cmd.none )
 
                         ShowingGameBoard _ _ _ ->
-                            model
+                            ( model, Cmd.none )
 
                 Two ->
                     case model of
                         ShowingDefaults _ ->
-                            model
+                            ( model, Cmd.none )
 
                         ShowingFormToChangeDefaults ( p1, p2 ) ->
-                            ShowingFormToChangeDefaults ( p1, { p2 | name = name } )
+                            ( ShowingFormToChangeDefaults ( p1, { p2 | name = name } ), Cmd.none )
 
                         ShowingGameBoard _ _ _ ->
-                            model
+                            ( model, Cmd.none )
 
         PlayerColorChanged id color ->
             case id of
                 One ->
                     case model of
                         ShowingDefaults _ ->
-                            model
+                            ( model, Cmd.none )
 
                         ShowingFormToChangeDefaults ( p1, p2 ) ->
-                            ShowingFormToChangeDefaults ( { p1 | color = color }, p2 )
+                            ( ShowingFormToChangeDefaults ( { p1 | color = color }, p2 ), Cmd.none )
 
                         ShowingGameBoard _ _ _ ->
-                            model
+                            ( model, Cmd.none )
 
                 Two ->
                     case model of
                         ShowingDefaults _ ->
-                            model
+                            ( model, Cmd.none )
 
                         ShowingFormToChangeDefaults ( p1, p2 ) ->
-                            ShowingFormToChangeDefaults ( p1, { p2 | color = color } )
+                            ( ShowingFormToChangeDefaults ( p1, { p2 | color = color } ), Cmd.none )
 
                         ShowingGameBoard _ _ _ ->
-                            model
+                            ( model, Cmd.none )
 
         ProceedToPlay ->
             case model of
                 ShowingDefaults players ->
-                    ShowingGameBoard players (NextMover One) initialGrid
+                    ( ShowingGameBoard players (NextMover One) initialGrid, Cmd.none )
 
                 ShowingFormToChangeDefaults players ->
-                    ShowingGameBoard players (NextMover One) initialGrid
+                    ( ShowingGameBoard players (NextMover One) initialGrid, Cmd.none )
 
                 ShowingGameBoard _ _ _ ->
-                    model
+                    ( model, Cmd.none )
 
         AddDisk colIndex ->
             case model of
                 ShowingDefaults _ ->
-                    model
+                    ( model, Cmd.none )
 
                 ShowingFormToChangeDefaults _ ->
-                    model
+                    ( model, Cmd.none )
 
                 ShowingGameBoard players gameState currentGrid ->
                     case gameState of
@@ -217,19 +231,19 @@ update msg model =
                                             One
                             in
                             if moverWonIt then
-                                ShowingGameBoard players (Winner pid) updatedGrid
+                                ( ShowingGameBoard players (Winner pid) updatedGrid, Cmd.none )
 
                             else if not moverWonIt && slotsVacantInGrid then
-                                ShowingGameBoard players (NextMover nextMover) updatedGrid
+                                ( ShowingGameBoard players (NextMover nextMover) updatedGrid, Cmd.none )
 
                             else
-                                ShowingGameBoard players Draw updatedGrid
+                                ( ShowingGameBoard players Draw updatedGrid, Cmd.none )
 
                         Draw ->
-                            model
+                            ( model, Cmd.none )
 
                         Winner _ ->
-                            model
+                            ( model, Cmd.none )
 
 
 
@@ -409,9 +423,8 @@ getVerticalSlotsToTest pid slots =
 
 
 -- Right diagonal is the one which links bottom left to top right
-
-
 -- TODO: indexes should be renamed to indices
+
 
 getIndexesOfRightDiagonal : ColumnIndex -> RowIndex -> List ( ColumnIndex, RowIndex )
 getIndexesOfRightDiagonal targetColumnIndex targetRowIndex =
