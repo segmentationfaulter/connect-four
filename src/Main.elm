@@ -59,10 +59,6 @@ type alias RowIndex =
     Int
 
 
-type alias LastInsertionMadeAt =
-    RowIndex
-
-
 type alias Slot =
     { filledBy : PlayerID
     , rowIndex : RowIndex
