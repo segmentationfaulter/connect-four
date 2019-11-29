@@ -9,11 +9,15 @@
     align-items: center;
 }
 
-.grid {
+:root {
     --slotWidth: 50px;
     --slotHeight: 50px;
     --gridHeight: 6;
     --gridWidth: 7;
+    --width : calc(var(--slotWidth) * var(--gridWidth));
+}
+
+.grid {
     display: flex;
     width: calc(var(--slotWidth) * var(--gridWidth));
     border: 1px solid gray;
@@ -55,4 +59,10 @@
 
 .game-info {
     margin-top: 15px;
+    width: var(--width);
+}
+
+.player-stats {
+    display: flex;
+    justify-content: space-between;
 }

@@ -38,7 +38,6 @@ type PlayerID
     | Two
 
 
-
 type GameState
     = CurrentMover PlayerID
     | Winner PlayerID
@@ -672,10 +671,27 @@ drawGrid players gameState grid =
 gameInfo : Players -> GameState -> Grid -> H.Html Msg
 gameInfo players gameState _ =
     let
+        stats : Players -> H.Html Msg
+        stats ( p1, p2 ) =
+            let
+                playerStats : Player -> H.Html Msg
+                playerStats player =
+                    H.div
+                        []
+                        [ H.h3 [] [ H.text player.name ]
+                        , H.div [] [ H.text ("Time Elapsed: " ++ String.fromInt player.timeElapsed) ]
+                        ]
+            in
+            H.div
+                [ Attr.class "player-stats" ]
+                [ playerStats p1
+                , playerStats p2
+                ]
+
         info =
             case gameState of
                 CurrentMover pid ->
-                    H.text ("Next mover: " ++ .name (getPlayerById pid players))
+                    H.text ("Current mover: " ++ .name (getPlayerById pid players))
 
                 Winner pid ->
                     H.text (.name (getPlayerById pid players) ++ " won it!")
@@ -685,7 +701,9 @@ gameInfo players gameState _ =
     in
     H.div
         [ Attr.class "game-info" ]
-        [ info ]
+        [ info
+        , stats players
+        ]
 
 
 
