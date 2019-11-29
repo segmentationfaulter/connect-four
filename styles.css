@@ -66,3 +66,14 @@
     display: flex;
     justify-content: space-between;
 }
+
+.reset-controls {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.reset-controls > button + button {
+    margin-top: 10px;
+}

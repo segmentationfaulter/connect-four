@@ -140,6 +140,7 @@ type Msg
     | ProceedToPlay
     | AddDisk ColumnIndex
     | Tick Time.Posix
+    | PlayAgain
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -282,6 +283,39 @@ update msg model =
 
                         Draw ->
                             ( model, Cmd.none )
+
+        PlayAgain ->
+            case model of
+                ShowingDefaults _ ->
+                    ( model, Cmd.none )
+
+                ShowingFormToChangeDefaults _ ->
+                    ( model, Cmd.none )
+
+                ShowingGameBoard players gameState _ ->
+                    let
+                        playersAfterTimerReset =
+                            let
+                                resetter : Player -> Player
+                                resetter player =
+                                    { player | timeElapsed = 0 }
+                            in
+                            Tuple.mapBoth resetter resetter players
+                    in
+                    case gameState of
+                        CurrentMover _ ->
+                            ( model, Cmd.none )
+
+                        Draw ->
+                            ( ShowingGameBoard playersAfterTimerReset (CurrentMover One) initialGrid, Cmd.none )
+
+                        Winner pid ->
+                            case pid of
+                                One ->
+                                    ( ShowingGameBoard playersAfterTimerReset (CurrentMover Two) initialGrid, Cmd.none )
+
+                                Two ->
+                                    ( ShowingGameBoard playersAfterTimerReset (CurrentMover One) initialGrid, Cmd.none )
 
 
 
@@ -681,6 +715,7 @@ gameInfo players gameState _ =
                         []
                         [ H.h3 [] [ H.text player.name ]
                         , H.div [] [ H.text ("Time Elapsed: " ++ String.fromInt player.timeElapsed) ]
+                        , H.div [] [ H.text ("Wins: " ++ String.fromInt player.winsCount) ]
                         ]
             in
             H.div
@@ -699,11 +734,31 @@ gameInfo players gameState _ =
 
                 Draw ->
                     H.text "Game over, it was a draw!"
+
+        controlsView =
+            let
+                controls =
+                    H.div
+                        [ Attr.class "reset-controls" ]
+                        [ H.button [ Attr.type_ "button", Events.onClick PlayAgain ] [ H.text "Play Again" ]
+                        , H.button [ Attr.type_ "button" ] [ H.text "Go to Start Screen" ]
+                        ]
+            in
+            case gameState of
+                CurrentMover _ ->
+                    H.text ""
+
+                Draw ->
+                    controls
+
+                Winner _ ->
+                    controls
     in
     H.div
         [ Attr.class "game-info" ]
         [ info
         , stats players
+        , controlsView
         ]
 
 
