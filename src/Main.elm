@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Browser
 import Html as H
@@ -49,6 +49,7 @@ type alias Player =
     , color : String
     , id : PlayerID
     , timeElapsed : Int
+    , winsCount : Int
     }
 
 
@@ -98,7 +99,7 @@ winningStreak =
 
 init : () -> ( Model, Cmd Msg )
 init () =
-    ( ShowingDefaults ( { name = "Player1", color = "#FF0000", id = One, timeElapsed = 0 }, { name = "Player2", color = "#0000FF", id = Two, timeElapsed = 0 } ), Cmd.none )
+    ( ShowingDefaults ( { name = "Player1", color = "#FF0000", id = One, timeElapsed = 0, winsCount = 0 }, { name = "Player2", color = "#0000FF", id = Two, timeElapsed = 0, winsCount = 0 } ), Cmd.none )
 
 
 initialGrid : Grid
@@ -244,7 +245,7 @@ update msg model =
                                             One
                             in
                             if moverWonIt then
-                                ( ShowingGameBoard players (Winner pid) updatedGrid, Cmd.none )
+                                ( ShowingGameBoard (incrementWinsCount pid players) (Winner pid) updatedGrid, Cmd.none )
 
                             else if not moverWonIt && slotsVacantInGrid then
                                 ( ShowingGameBoard players (CurrentMover nextMover) updatedGrid, Cmd.none )
@@ -728,3 +729,13 @@ getPlayerById pid players =
 
         Two ->
             Tuple.second players
+
+
+incrementWinsCount : PlayerID -> Players -> Players
+incrementWinsCount pid ( p1, p2 ) =
+    case pid of
+        One ->
+            ( { p1 | winsCount = p1.winsCount + 1 }, p2 )
+
+        Two ->
+            ( p1, { p2 | winsCount = p2.winsCount + 1 } )
