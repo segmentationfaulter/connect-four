@@ -141,6 +141,7 @@ type Msg
     | AddDisk ColumnIndex
     | Tick Time.Posix
     | PlayAgain
+    | GoToStartScreen
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -316,6 +317,17 @@ update msg model =
 
                                 Two ->
                                     ( ShowingGameBoard playersAfterTimerReset (CurrentMover One) initialGrid, Cmd.none )
+
+        GoToStartScreen ->
+            case model of
+                ShowingDefaults _ ->
+                    ( model, Cmd.none )
+
+                ShowingFormToChangeDefaults _ ->
+                    ( model, Cmd.none )
+
+                ShowingGameBoard _ _ _ ->
+                    init ()
 
 
 
@@ -741,7 +753,7 @@ gameInfo players gameState _ =
                     H.div
                         [ Attr.class "reset-controls" ]
                         [ H.button [ Attr.type_ "button", Events.onClick PlayAgain ] [ H.text "Play Again" ]
-                        , H.button [ Attr.type_ "button" ] [ H.text "Go to Start Screen" ]
+                        , H.button [ Attr.type_ "button", Events.onClick GoToStartScreen ] [ H.text "Go to Start Screen" ]
                         ]
             in
             case gameState of
