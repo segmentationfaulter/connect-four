@@ -585,7 +585,6 @@ wonAgainstSlotsUnderTest slots =
                 headElementIndex :: rest ->
                     case lastSlotIndex of
                         Just index ->
-                            -- TODO : Is the abs call needed here?
                             if abs (headElementIndex - index) == 1 then
                                 helper rest { streak = streak + 1, lastSlotIndex = Just headElementIndex }
 
@@ -608,7 +607,6 @@ wonAgainstSlotsUnderTest slots =
 didMoverWonIt : ColumnIndex -> PlayerID -> Grid -> Bool
 didMoverWonIt targetColumnIndex pid grid =
     let
-        -- TODO: rowIndex is being calculated repeatedly here, getting it once should be enough
         targetColumnInList =
             List.filter (\(Column _ colIndex) -> colIndex == targetColumnIndex) grid
 
