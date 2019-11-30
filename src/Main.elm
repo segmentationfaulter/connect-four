@@ -71,14 +71,8 @@ type alias Slot =
     }
 
 
-
--- TODO: Apparently, filledBy field is not needed here
-
-
-type alias SlotUnderTest =
-    { filledBy : PlayerID
-    , index : Int
-    }
+type alias SlotsUnderTest =
+    List Int
 
 
 type Column
@@ -490,29 +484,30 @@ addDisk pid targetIndex grid =
     List.map mapper grid
 
 
-getHorizontalSlotsToTest : RowIndex -> PlayerID -> Grid -> List SlotUnderTest
+getHorizontalSlotsToTest : RowIndex -> PlayerID -> Grid -> SlotsUnderTest
 getHorizontalSlotsToTest rowIndex pid grid =
     let
-        mapper : Column -> List SlotUnderTest
+        mapper : Column -> SlotsUnderTest
         mapper (Column slots colIndex) =
             slots
                 |> List.filter (\slot -> slot.rowIndex == rowIndex && slot.filledBy == pid)
-                |> List.map (\slot -> { filledBy = slot.filledBy, index = colIndex })
+                |> List.map (\_ -> colIndex)
     in
     grid
         |> List.map mapper
         |> List.concat
 
 
-getVerticalSlotsToTest : PlayerID -> List Slot -> List SlotUnderTest
+getVerticalSlotsToTest : PlayerID -> List Slot -> SlotsUnderTest
 getVerticalSlotsToTest pid slots =
     slots
-        |> List.map (\slot -> { filledBy = slot.filledBy, index = slot.rowIndex })
         |> List.filter (\slot -> slot.filledBy == pid)
+        |> List.map (\slot -> slot.rowIndex)
 
 
 
 -- Right diagonal is the one which links bottom left to top right
+
 
 getIndicesOfRightDiagonal : ColumnIndex -> RowIndex -> List ( ColumnIndex, RowIndex )
 getIndicesOfRightDiagonal targetColumnIndex targetRowIndex =
@@ -562,48 +557,48 @@ getIndicesOfLeftDiagonal targetColumnIndex targetRowIndex =
     upperHalfOfIndexes targetColumnIndex targetRowIndex [] ++ lowerHalfOfIndexes (targetColumnIndex + 1) (targetRowIndex - 1) []
 
 
-getSlotsToTestOnDiagonal : List ( ColumnIndex, RowIndex ) -> PlayerID -> Grid -> List SlotUnderTest
+getSlotsToTestOnDiagonal : List ( ColumnIndex, RowIndex ) -> PlayerID -> Grid -> SlotsUnderTest
 getSlotsToTestOnDiagonal indices pid grid =
     let
         ( columnIndices, rowIndices ) =
             List.unzip indices
 
-        -- TODO: We shouldn't need to find targetColumns, we can directly map2
         targetColumns =
             List.filter (\(Column _ colIndex) -> List.member colIndex columnIndices) grid
 
-        mapper : Column -> RowIndex -> List SlotUnderTest
+        mapper : Column -> RowIndex -> SlotsUnderTest
         mapper (Column slots colIndex) rowIndex =
             slots
                 |> List.filter (\slot -> slot.rowIndex == rowIndex && slot.filledBy == pid)
-                |> List.map (\slot -> { filledBy = slot.filledBy, index = colIndex })
+                |> List.map (\_ -> colIndex)
     in
     List.map2 mapper targetColumns rowIndices
         |> List.concat
 
 
-wonAgainstSlotsUnderTest : List SlotUnderTest -> Bool
+wonAgainstSlotsUnderTest : SlotsUnderTest -> Bool
 wonAgainstSlotsUnderTest slots =
     let
-        helper : List SlotUnderTest -> { streak : Int, lastIndex : Maybe Int } -> Int
-        helper slots_ { streak, lastIndex } =
+        helper : SlotsUnderTest -> { streak : Int, lastSlotIndex : Maybe Int } -> Int
+        helper slots_ { streak, lastSlotIndex } =
             case slots_ of
-                head :: tail ->
-                    case lastIndex of
+                headElementIndex :: rest ->
+                    case lastSlotIndex of
                         Just index ->
-                            if abs (head.index - index) == 1 then
-                                helper tail { streak = streak + 1, lastIndex = Just head.index }
+                            -- TODO : Is the abs call needed here?
+                            if abs (headElementIndex - index) == 1 then
+                                helper rest { streak = streak + 1, lastSlotIndex = Just headElementIndex }
 
                             else
-                                helper tail { streak = 1, lastIndex = Just head.index }
+                                helper rest { streak = 1, lastSlotIndex = Just headElementIndex }
 
                         Nothing ->
-                            helper tail { streak = 1, lastIndex = Just head.index }
+                            helper rest { streak = 1, lastSlotIndex = Just headElementIndex }
 
                 [] ->
                     streak
     in
-    if helper slots { streak = 0, lastIndex = Nothing } > 3 then
+    if helper slots { streak = 0, lastSlotIndex = Nothing } > 3 then
         True
 
     else
@@ -662,7 +657,7 @@ didMoverWonIt targetColumnIndex pid grid =
         rightDiagonalWinningCombinationPresent =
             wonAgainstSlotsUnderTest rightDiagonalSlotsToTest
 
-        leftDiagonalSlotsToTest : List SlotUnderTest
+        leftDiagonalSlotsToTest : SlotsUnderTest
         leftDiagonalSlotsToTest =
             let
                 leftDiagonalIndices =
