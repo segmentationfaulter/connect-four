@@ -346,7 +346,8 @@ view model =
         ShowingGameBoard players mover grid ->
             H.div
                 [ Attr.class "game-view" ]
-                [ drawGrid players mover grid
+                [ H.p [Attr.class "help-text"] [ H.text "Click on a column to add a disk to it" ]
+                , drawGrid players mover grid
                 , gameInfo players mover grid
                 ]
 
@@ -362,10 +363,13 @@ defaultsForPlayersView players =
         mapper player =
             H.div
                 []
-                [ H.h3 [] [ H.text ("Player" ++ String.fromInt (mapPlayerIdToNumber player.id) ++ "'s" ++ "Name:") ]
-                , H.p [] [ H.text player.name ]
-                , H.h3 [] [ H.text ("Player" ++ String.fromInt (mapPlayerIdToNumber player.id) ++ "'s" ++ "Color:") ]
-                , H.p [] [ H.text player.color ]
+                [
+                    H.h3 [] [H.text ("Player" ++ String.fromInt (mapPlayerIdToNumber player.id))],
+                    H.p [] [H.text ("Name: " ++ player.name)],
+                    H.p [] [
+                        H.text "Color: ",
+                        H.span [Attr.class "player-color", Attr.style "background-color" player.color] []
+                    ]
                 ]
 
         playersDefaultsView : ( H.Html Msg, H.Html Msg )
@@ -375,16 +379,18 @@ defaultsForPlayersView players =
         controls : H.Html Msg
         controls =
             H.div
-                []
+                [Attr.class "default-view-controls"]
                 [ H.button [ Events.onClick ProceedToPlay ] [ H.text "Accept Defaults" ]
                 , H.button [ Events.onClick ProceedToChangeDefaults ] [ H.text "Change Defaults" ]
                 ]
     in
     H.div
-        []
+        [Attr.class "players-defaults"]
         [ H.h1 [] [ H.text "Defaults For Players" ]
-        , Tuple.first playersDefaultsView
-        , Tuple.second playersDefaultsView
+        , H.div [Attr.class "defaults"] [
+            Tuple.first playersDefaultsView
+            , Tuple.second playersDefaultsView
+        ]
         , controls
         ]
 
@@ -448,11 +454,11 @@ formViewToChangeDefaults players =
                     False
     in
     H.form
-        [ Events.onSubmit ProceedToPlay ]
+        [ Events.onSubmit ProceedToPlay, Attr.class "form-view" ]
         [ Tuple.first fieldsets
         , Tuple.second fieldsets
         , H.input [ Attr.type_ "submit", Attr.value "Submit change and proceed to game", Attr.disabled disableSubmitButton ] []
-        , H.p [] [ validationMessage ]
+        , H.p [Attr.class "error-message"] [ validationMessage ]
         ]
 
 

@@ -2,6 +2,57 @@
     box-sizing: border-box;
 }
 
+:root {
+    --slotWidth: 50px;
+    --slotHeight: 50px;
+    --gridHeight: 6;
+    --gridWidth: 7;
+    --width : calc(var(--slotWidth) * var(--gridWidth));
+    --start-screen-width: 40%;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
+.players-defaults {
+    width: var(--start-screen-width);
+    margin: 100px auto 0;
+    text-align: center;
+}
+
+.players-defaults > .defaults {
+    display: flex;
+    justify-content: space-between;
+}
+
+.player-color {
+    display: inline-block;
+    width: 40px;
+    height: 15px;
+}
+
+.default-view-controls > button + button {
+    margin-left: 20px;
+}
+
+form.form-view {
+    width: var(--start-screen-width);
+    margin: 100px auto 0;
+}
+
+.form-view > fieldset {
+    margin-bottom: 25px;
+}
+
+.form-view input {
+    margin-right: 20px;
+}
+
+.form-view .error-message {
+    color: red;
+}
+
 .game-view {
     margin: 100px;
     display: flex;
@@ -9,12 +60,8 @@
     align-items: center;
 }
 
-:root {
-    --slotWidth: 50px;
-    --slotHeight: 50px;
-    --gridHeight: 6;
-    --gridWidth: 7;
-    --width : calc(var(--slotWidth) * var(--gridWidth));
+p.help-text {
+    font-size: 12px;
 }
 
 .grid {
