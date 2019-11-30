@@ -513,11 +513,9 @@ getVerticalSlotsToTest pid slots =
 
 
 -- Right diagonal is the one which links bottom left to top right
--- TODO: indexes should be renamed to indices
 
-
-getIndexesOfRightDiagonal : ColumnIndex -> RowIndex -> List ( ColumnIndex, RowIndex )
-getIndexesOfRightDiagonal targetColumnIndex targetRowIndex =
+getIndicesOfRightDiagonal : ColumnIndex -> RowIndex -> List ( ColumnIndex, RowIndex )
+getIndicesOfRightDiagonal targetColumnIndex targetRowIndex =
     let
         upperHalfOfIndexes : ColumnIndex -> RowIndex -> List ( ColumnIndex, RowIndex ) -> List ( ColumnIndex, RowIndex )
         upperHalfOfIndexes colIndex rowIndex accumulator =
@@ -542,8 +540,8 @@ getIndexesOfRightDiagonal targetColumnIndex targetRowIndex =
 -- Left diagonal is the one which link bottom right to top left
 
 
-getIndexesOfLeftDiagonal : ColumnIndex -> RowIndex -> List ( ColumnIndex, RowIndex )
-getIndexesOfLeftDiagonal targetColumnIndex targetRowIndex =
+getIndicesOfLeftDiagonal : ColumnIndex -> RowIndex -> List ( ColumnIndex, RowIndex )
+getIndicesOfLeftDiagonal targetColumnIndex targetRowIndex =
     let
         upperHalfOfIndexes : ColumnIndex -> RowIndex -> List ( ColumnIndex, RowIndex ) -> List ( ColumnIndex, RowIndex )
         upperHalfOfIndexes colIndex rowIndex accumulator =
@@ -657,7 +655,7 @@ didMoverWonIt targetColumnIndex pid grid =
                             []
 
                         (Column slots _) :: _ ->
-                            getIndexesOfRightDiagonal targetColumnIndex (List.length slots - 1)
+                            getIndicesOfRightDiagonal targetColumnIndex (List.length slots - 1)
             in
             getSlotsToTestOnDiagonal rightDiagonalIndices pid grid
 
@@ -673,7 +671,7 @@ didMoverWonIt targetColumnIndex pid grid =
                             []
 
                         (Column slots _) :: _ ->
-                            getIndexesOfLeftDiagonal targetColumnIndex (List.length slots - 1)
+                            getIndicesOfLeftDiagonal targetColumnIndex (List.length slots - 1)
             in
             getSlotsToTestOnDiagonal leftDiagonalIndices pid grid
 
