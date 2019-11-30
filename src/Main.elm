@@ -9,6 +9,7 @@ import Time
 import Tuple
 
 
+main : Program () Model Msg
 main =
     Browser.element
         { init = init
@@ -88,14 +89,17 @@ type alias Grid =
     List Column
 
 
+gridHeight : Int
 gridHeight =
     6
 
 
+gridWidth : Int
 gridWidth =
     7
 
 
+winningStreak : Int
 winningStreak =
     4
 
@@ -270,7 +274,7 @@ update msg model =
                         Winner _ ->
                             ( model, Cmd.none )
 
-        Tick posixTime ->
+        Tick _ ->
             case model of
                 ShowingStartScreen _ ->
                     ( model, Cmd.none )
@@ -620,7 +624,7 @@ didMoverWonIt targetColumnIndex pid grid =
                 [] ->
                     []
 
-                (Column slots _) :: tail ->
+                (Column slots _) :: _ ->
                     getHorizontalSlotsToTest (List.length slots - 1) pid grid
 
         horizontalWinningCombinationIsPresent =
@@ -635,7 +639,7 @@ didMoverWonIt targetColumnIndex pid grid =
                 [] ->
                     []
 
-                (Column slots _) :: tail ->
+                (Column slots _) :: _ ->
                     getVerticalSlotsToTest pid slots
 
         verticalWinningCombinationIsPresent =
@@ -652,7 +656,7 @@ didMoverWonIt targetColumnIndex pid grid =
                         [] ->
                             []
 
-                        (Column slots _) :: tail ->
+                        (Column slots _) :: _ ->
                             getIndexesOfRightDiagonal targetColumnIndex (List.length slots - 1)
             in
             getSlotsToTestOnDiagonal rightDiagonalIndices pid grid
@@ -668,7 +672,7 @@ didMoverWonIt targetColumnIndex pid grid =
                         [] ->
                             []
 
-                        (Column slots _) :: tail ->
+                        (Column slots _) :: _ ->
                             getIndexesOfLeftDiagonal targetColumnIndex (List.length slots - 1)
             in
             getSlotsToTestOnDiagonal leftDiagonalIndices pid grid
