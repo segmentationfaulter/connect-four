@@ -20,13 +20,16 @@ main =
 
 
 -- Model
--- TODO: Unify both of the states about start screen
 
 
 type Model
+    = ShowingStartScreen StartScreen
+    | ShowingGameBoard Players GameState Grid
+
+
+type StartScreen
     = ShowingDefaults Players
     | ShowingFormToChangeDefaults Players
-    | ShowingGameBoard Players GameState Grid
 
 
 type alias Players =
@@ -99,7 +102,7 @@ winningStreak =
 
 init : () -> ( Model, Cmd Msg )
 init () =
-    ( ShowingDefaults ( { name = "Player1", color = "#FF0000", id = One, timeElapsed = 0, winsCount = 0 }, { name = "Player2", color = "#0000FF", id = Two, timeElapsed = 0, winsCount = 0 } ), Cmd.none )
+    ( ShowingStartScreen (ShowingDefaults ( { name = "Player1", color = "#FF0000", id = One, timeElapsed = 0, winsCount = 0 }, { name = "Player2", color = "#0000FF", id = Two, timeElapsed = 0, winsCount = 0 } )), Cmd.none )
 
 
 initialGrid : Grid
@@ -122,10 +125,7 @@ subscriptions model =
                 _ ->
                     Sub.none
 
-        ShowingDefaults _ ->
-            Sub.none
-
-        ShowingFormToChangeDefaults _ ->
+        ShowingStartScreen _ ->
             Sub.none
 
 
@@ -149,11 +149,13 @@ update msg model =
     case msg of
         ProceedToChangeDefaults ->
             case model of
-                ShowingDefaults players ->
-                    ( ShowingFormToChangeDefaults players, Cmd.none )
+                ShowingStartScreen startScreen ->
+                    case startScreen of
+                        ShowingFormToChangeDefaults _ ->
+                            ( model, Cmd.none )
 
-                ShowingFormToChangeDefaults players ->
-                    ( model, Cmd.none )
+                        ShowingDefaults players ->
+                            ( ShowingStartScreen (ShowingFormToChangeDefaults players), Cmd.none )
 
                 ShowingGameBoard _ _ _ ->
                     ( model, Cmd.none )
@@ -162,22 +164,26 @@ update msg model =
             case id of
                 One ->
                     case model of
-                        ShowingDefaults _ ->
-                            ( model, Cmd.none )
+                        ShowingStartScreen startScreen ->
+                            case startScreen of
+                                ShowingDefaults _ ->
+                                    ( model, Cmd.none )
 
-                        ShowingFormToChangeDefaults ( p1, p2 ) ->
-                            ( ShowingFormToChangeDefaults ( { p1 | name = name }, p2 ), Cmd.none )
+                                ShowingFormToChangeDefaults ( p1, p2 ) ->
+                                    ( ShowingStartScreen (ShowingFormToChangeDefaults ( { p1 | name = name }, p2 )), Cmd.none )
 
                         ShowingGameBoard _ _ _ ->
                             ( model, Cmd.none )
 
                 Two ->
                     case model of
-                        ShowingDefaults _ ->
-                            ( model, Cmd.none )
+                        ShowingStartScreen startScreen ->
+                            case startScreen of
+                                ShowingDefaults _ ->
+                                    ( model, Cmd.none )
 
-                        ShowingFormToChangeDefaults ( p1, p2 ) ->
-                            ( ShowingFormToChangeDefaults ( p1, { p2 | name = name } ), Cmd.none )
+                                ShowingFormToChangeDefaults ( p1, p2 ) ->
+                                    ( ShowingStartScreen (ShowingFormToChangeDefaults ( p1, { p2 | name = name } )), Cmd.none )
 
                         ShowingGameBoard _ _ _ ->
                             ( model, Cmd.none )
@@ -186,43 +192,46 @@ update msg model =
             case id of
                 One ->
                     case model of
-                        ShowingDefaults _ ->
-                            ( model, Cmd.none )
+                        ShowingStartScreen startScreen ->
+                            case startScreen of
+                                ShowingDefaults _ ->
+                                    ( model, Cmd.none )
 
-                        ShowingFormToChangeDefaults ( p1, p2 ) ->
-                            ( ShowingFormToChangeDefaults ( { p1 | color = color }, p2 ), Cmd.none )
+                                ShowingFormToChangeDefaults ( p1, p2 ) ->
+                                    ( ShowingStartScreen (ShowingFormToChangeDefaults ( { p1 | color = color }, p2 )), Cmd.none )
 
                         ShowingGameBoard _ _ _ ->
                             ( model, Cmd.none )
 
                 Two ->
                     case model of
-                        ShowingDefaults _ ->
-                            ( model, Cmd.none )
+                        ShowingStartScreen startScreen ->
+                            case startScreen of
+                                ShowingDefaults _ ->
+                                    ( model, Cmd.none )
 
-                        ShowingFormToChangeDefaults ( p1, p2 ) ->
-                            ( ShowingFormToChangeDefaults ( p1, { p2 | color = color } ), Cmd.none )
+                                ShowingFormToChangeDefaults ( p1, p2 ) ->
+                                    ( ShowingStartScreen (ShowingFormToChangeDefaults ( p1, { p2 | color = color } )), Cmd.none )
 
                         ShowingGameBoard _ _ _ ->
                             ( model, Cmd.none )
 
         ProceedToPlay ->
             case model of
-                ShowingDefaults players ->
-                    ( ShowingGameBoard players (CurrentMover One) initialGrid, Cmd.none )
+                ShowingStartScreen startScreen ->
+                    case startScreen of
+                        ShowingDefaults players ->
+                            ( ShowingGameBoard players (CurrentMover One) initialGrid, Cmd.none )
 
-                ShowingFormToChangeDefaults players ->
-                    ( ShowingGameBoard players (CurrentMover One) initialGrid, Cmd.none )
+                        ShowingFormToChangeDefaults players ->
+                            ( ShowingGameBoard players (CurrentMover One) initialGrid, Cmd.none )
 
                 ShowingGameBoard _ _ _ ->
                     ( model, Cmd.none )
 
         AddDisk colIndex ->
             case model of
-                ShowingDefaults _ ->
-                    ( model, Cmd.none )
-
-                ShowingFormToChangeDefaults _ ->
+                ShowingStartScreen _ ->
                     ( model, Cmd.none )
 
                 ShowingGameBoard players gameState currentGrid ->
@@ -263,10 +272,7 @@ update msg model =
 
         Tick posixTime ->
             case model of
-                ShowingFormToChangeDefaults _ ->
-                    ( model, Cmd.none )
-
-                ShowingDefaults _ ->
+                ShowingStartScreen _ ->
                     ( model, Cmd.none )
 
                 ShowingGameBoard ( p1, p2 ) gameState grid ->
@@ -287,10 +293,7 @@ update msg model =
 
         PlayAgain ->
             case model of
-                ShowingDefaults _ ->
-                    ( model, Cmd.none )
-
-                ShowingFormToChangeDefaults _ ->
+                ShowingStartScreen _ ->
                     ( model, Cmd.none )
 
                 ShowingGameBoard players gameState _ ->
@@ -320,14 +323,11 @@ update msg model =
 
         GoToStartScreen ->
             case model of
-                ShowingDefaults _ ->
-                    ( model, Cmd.none )
-
-                ShowingFormToChangeDefaults _ ->
-                    ( model, Cmd.none )
-
                 ShowingGameBoard _ _ _ ->
                     init ()
+
+                ShowingStartScreen _ ->
+                    ( model, Cmd.none )
 
 
 
@@ -337,11 +337,13 @@ update msg model =
 view : Model -> H.Html Msg
 view model =
     case model of
-        ShowingDefaults players ->
-            defaultsForPlayersView players
+        ShowingStartScreen startScreen ->
+            case startScreen of
+                ShowingDefaults players ->
+                    defaultsForPlayersView players
 
-        ShowingFormToChangeDefaults players ->
-            formViewToChangeDefaults players
+                ShowingFormToChangeDefaults players ->
+                    formViewToChangeDefaults players
 
         ShowingGameBoard players mover grid ->
             H.div
